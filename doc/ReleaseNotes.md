@@ -1,3 +1,39 @@
+# v02-12-02
+
+* 2022-11-23 Thomas Madlener ([PR#62](https://github.com/iLCSoft/MarlinTrkProcessors/pull/62))
+  - Make sure that the `_histos` pointer is at least initialized to a `nullptr` to avoid a spurious seg fault when trying to delete it uninitialized.
+
+# v02-12-01
+
+* 2022-06-28 Thomas Madlener ([PR#61](https://github.com/iLCSoft/MarlinTrkProcessors/pull/61))
+  - Make doxygen cmake config work with newer cmakes
+
+# v02-12
+
+* 2021-11-05 Bohdan Dudar ([PR#55](https://github.com/iLCSoft/MarlinTrkProcessors/pull/55))
+  - Center of the SET strips is now properly in the middle of the sensor modules.
+  - Removed unused `vertex_x`, `vertex_y`, `vertex_z` steering parameters.
+
+* 2021-09-22 Nazar Bartosik ([PR#53](https://github.com/iLCSoft/MarlinTrkProcessors/pull/53))
+  - Added time smearing to the DDPlanarDigiProcessor 
+  - Introduced a time window for digitized hits in the DDPlanarDigiProcessor 
+  - Introduced TOF compensation for digitized hits in the DDPlanarDigiProcessor
+
+* 2021-09-02 Placido Fernandez Declara ([PR#49](https://github.com/iLCSoft/MarlinTrkProcessors/pull/49))
+  - DDPlanarDigiProcessor:  Add setting of the fromType and toType parameters for the LCRelation collection between TrackerHit and SimTrackerHit
+
+* 2021-08-23 Andre Sailer ([PR#51](https://github.com/iLCSoft/MarlinTrkProcessors/pull/51))
+  - CI: build against LCG_99python2 gcc8 and LCG_100 gcc10, clang11
+
+* 2020-06-02 Erica Brondolin ([PR#45](https://github.com/iLCSoft/MarlinTrkProcessors/pull/45))
+  - ClonesAndSplitTracksFinder 
+    - If mergeSplitTracks set to `true`, pairs of tracks above a minimum pT requirements are compared in terms of pt, theta and phi
+    - For each pair of reconstructed tracks: calculate significance for each parameter, impose a cut on the significance for each parameter, remove possible common hits and sort them in r, fit the new merged track
+    - Results show positive effect on both single muons and complex events, with no significant increase of the run time ([Link to the slides](https://indico.cern.ch/event/920887/))
+
+* 2020-01-27 Erica Brondolin ([PR#44](https://github.com/iLCSoft/MarlinTrkProcessors/pull/44))
+  - In case finaliseLCIOTrack fails in the RefitFinal, the track should not be saved
+
 # v02-11
 
 * 2019-08-21 Frank Gaede ([PR#43](https://github.com/iLCSoft/MarlinTrkProcessors/pull/43))

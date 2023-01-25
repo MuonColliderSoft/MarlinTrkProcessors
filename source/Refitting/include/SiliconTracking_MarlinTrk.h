@@ -258,7 +258,7 @@ protected:
   // histogram member variables
   
   bool  _createDiagnosticsHistograms;
-  DiagnosticsHistograms::Histograms* _histos ;
+  DiagnosticsHistograms::Histograms* _histos{nullptr};
 
   
   int _ntriplets, _ntriplets_good, _ntriplets_2MCP, _ntriplets_3MCP, _ntriplets_1MCP_Bad, _ntriplets_bad;

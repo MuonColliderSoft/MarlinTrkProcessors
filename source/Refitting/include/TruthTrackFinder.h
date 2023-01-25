@@ -95,9 +95,6 @@ class TruthTrackFinder : public Processor {
 		
 } ;
 
-bool sort_by_radius(EVENT::TrackerHit*, EVENT::TrackerHit*);
-
-
 #endif
 
 

@@ -12,6 +12,7 @@
 #include "UTIL/LCTrackerConf.h"
 #include <UTIL/ILDConf.h>
 #include <UTIL/BitSet32.h>
+#include <UTIL/LCRelationNavigator.h>
 
 
 #include "DD4hep/Detector.h"
@@ -70,10 +71,10 @@ DDPlanarDigiProcessor::DDPlanarDigiProcessor() : Processor("DDPlanarDigiProcesso
                               resVEx );
 
   FloatVec resTEx ;
-  resTEx.push_back( 0.0 ) ;
+  resTEx.push_back( -1 ) ;
 
   registerProcessorParameter( "ResolutionT" , 
-                              "resolution of time - either one per layer or one for all layers " ,
+                              "resolution of time - either one per layer or one for all layers. if the single entry is negative, disable time smearing. " ,
                               _resT ,
                               resTEx );
 
@@ -256,14 +257,12 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
     
     CellIDEncoder<TrackerHitPlaneImpl> cellid_encoder( lcio::LCTrackerCellID::encoding_string() , trkhitVec ) ;
 
-    LCCollectionVec* relCol = new LCCollectionVec(LCIO::LCRELATION);
-    // to store the weights
-    LCFlagImpl lcFlag(0) ;
-    lcFlag.setBit( LCIO::LCREL_WEIGHTED ) ;
-    relCol->setFlag( lcFlag.getFlag()  ) ;
-    
+    // Relation collection TrackerHit, SimTrackerHit
+    LCCollection* thsthcol  = 0;
+    UTIL::LCRelationNavigator thitNav = UTIL::LCRelationNavigator( LCIO::TRACKERHITPLANE, LCIO::SIMTRACKERHIT );
+
     CellIDDecoder<SimTrackerHit> cellid_decoder( STHcol) ;
-    
+
     
     int nSimHits = STHcol->getNumberOfElements()  ;
     
@@ -353,19 +352,19 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
       // Smear time of the hit and apply the time window cut if needed
       //***************************************************************
       
-      // Smearing time of the hit
-      float resT = _resT.size() > 1 ? _resT.at(layer) : _resT.at(0); 
-      double tSmear  = resT == 0.0 ? 0.0 : gsl_ran_gaussian( _rng, resT );
-      _h[hT]->Fill( resT == 0.0 ? 0.0 : tSmear / resT );
-      _h[diffT]->Fill( tSmear );
-
-      // Skipping the hit if its time is outside the acceptance time window
-      double hitT = simTHit->getTime() + tSmear;
-      streamlog_out(DEBUG3) << "smeared hit at T: " << simTHit->getTime() << " ns to T: " << hitT << " ns according to resolution: " << resT << " ns" << std::endl;
+      double hitT = simTHit->getTime();
       
-      float timeWindow_min = _timeWindow_min.size() > 1 ? _timeWindow_min.at(layer) : _timeWindow_min.at(0);
-      float timeWindow_max = _timeWindow_max.size() > 1 ? _timeWindow_max.at(layer) : _timeWindow_max.at(0);
+      // Smearing time of the hit
+      if (_resT.size() and _resT[0] > 0.0) {
+        float resT = _resT.size() > 1 ? _resT.at(layer) : _resT.at(0);
+        double tSmear  = resT > 0.0 ? gsl_ran_gaussian( _rng, resT ) : 0.0;
+        _h[hT]->Fill( resT > 0.0 ? tSmear / resT : 0.0 );
+        _h[diffT]->Fill( tSmear );
 
+        hitT += tSmear;
+        streamlog_out(DEBUG3) << "smeared hit at T: " << simTHit->getTime() << " ns to T: " << hitT << " ns according to resolution: " << resT << " ns" << std::endl;
+      }
+     
       // Correcting for the propagation time
       if (_correctTimesForPropagation) {
         double dt = oldPos.r() / ( TMath::C() / 1e6 );
@@ -373,10 +372,15 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
         streamlog_out(DEBUG3) << "corrected hit at R: " << oldPos.r() << " mm by propagation time: " << dt << " ns to T: " << hitT << " ns" << std::endl;
       }
       
-      if (_useTimeWindow && ( hitT < timeWindow_min || hitT > timeWindow_max) ) {
-        streamlog_out(DEBUG4) << "hit at T: " << hitT << " smeared to: " << hitT << " is outside the time window: hit dropped"  << std::endl;
-        ++nDismissedHits;
-        continue; 
+      // Skipping the hit if its time is outside the acceptance time window
+      if (_useTimeWindow) {
+        float timeWindow_min = _timeWindow_min.size() > 1 ? _timeWindow_min.at(layer) : _timeWindow_min.at(0);
+        float timeWindow_max = _timeWindow_max.size() > 1 ? _timeWindow_max.at(layer) : _timeWindow_max.at(0);
+        if ( hitT < timeWindow_min || hitT > timeWindow_max ) {
+          streamlog_out(DEBUG4) << "hit at T: " << simTHit->getTime() << " smeared to: " << hitT << " is outside the time window: hit dropped"  << std::endl;
+          ++nDismissedHits;
+          continue;
+        }
       }
 
 
@@ -412,11 +416,25 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
         // dd4hep::rec::Vector3D newPosTmp = oldPos +  uSmear * u ;  
         // if( ! _isStrip )  newPosTmp = newPosTmp +  vSmear * v ;  
         
-        
-        dd4hep::rec::Vector3D newPosTmp = 1./dd4hep::mm  * ( ! _isStrip  ? 
-                                                            surf->localToGlobal( dd4hep::rec::Vector2D (  ( uL + uSmear ) * dd4hep::mm, ( vL + vSmear )  *dd4hep::mm ) )  :
-                                                            surf->localToGlobal( dd4hep::rec::Vector2D (  ( uL + uSmear ) * dd4hep::mm,          0.                  ) ) 
-                                                            ) ;
+        dd4hep::rec::Vector3D newPosTmp;
+        if (_isStrip){
+            if (_subDetName == "SET"){
+                double xStripPos, yStripPos, zStripPos;
+                //Find intersection of the strip with the z=centerOfSensor plane to set it as the center of the SET strip
+                dd4hep::rec::Vector3D simHitPosSmeared = (1./dd4hep::mm) * ( surf->localToGlobal( dd4hep::rec::Vector2D( (uL+uSmear)*dd4hep::mm, 0.) ) );
+                zStripPos = surf->origin()[2] / dd4hep::mm ;
+                double lineParam = (zStripPos - simHitPosSmeared[2])/v[2];
+                xStripPos = simHitPosSmeared[0] + lineParam*v[0];
+                yStripPos = simHitPosSmeared[1] + lineParam*v[1];
+                newPosTmp = dd4hep::rec::Vector3D(xStripPos, yStripPos, zStripPos);    
+            }
+            else{
+                newPosTmp = (1./dd4hep::mm) * ( surf->localToGlobal( dd4hep::rec::Vector2D( (uL+uSmear)*dd4hep::mm, 0. ) ) );    
+            }
+        }
+        else{
+            newPosTmp = (1./dd4hep::mm) * ( surf->localToGlobal( dd4hep::rec::Vector2D( (uL+uSmear)*dd4hep::mm, (vL+vSmear)*dd4hep::mm ) ) );
+        }
 
         streamlog_out( DEBUG1 ) << " hit at    : " << oldPos 
                                 << " smeared to: " << newPosTmp
@@ -507,14 +525,9 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
       //**************************************************************************
       // Set Relation to SimTrackerHit
       //**************************************************************************    
-         
-      LCRelationImpl* rel = new LCRelationImpl;
 
-      rel->setFrom (trkHit);
-      rel->setTo (simTHit);
-      rel->setWeight( 1.0 );
-      relCol->addElement(rel);
-
+      // Set relation with LCRelationNavigator
+      thitNav.addRelation(trkHit, simTHit);
       
       //**************************************************************************
       // Add hit to collection
@@ -527,6 +540,9 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
       streamlog_out(DEBUG3) << "-------------------------------------------------------" << std::endl;
       
     }      
+
+    // Create relation collection
+    thsthcol = thitNav.createLCCollection();
     
     // Filling the fraction of accepted hits in the event
     float accFraction = nSimHits > 0 ? float(nCreatedHits) / float(nSimHits) * 100.0 : 0.0;
@@ -537,7 +553,7 @@ void DDPlanarDigiProcessor::processEvent( LCEvent * evt ) {
     //**************************************************************************    
     
     evt->addCollection( trkhitVec , _outColName ) ;
-    evt->addCollection( relCol , _outRelColName ) ;
+    evt->addCollection( thsthcol , _outRelColName ) ;
     
     streamlog_out(DEBUG4) << "Created " << nCreatedHits << " hits, " << nDismissedHits << " hits  dismissed\n";
     

@@ -1,5 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "TruthTrackFinder.h"
+#include "HitsSorterAndDebugger.h"
 
 #include <marlinutil/HelixClass.h>
 
@@ -46,10 +47,6 @@
 #include <iostream>
 #include <climits>
 #include <cfloat>
-
-//CxxUtils/
-#include "fpcompare.h"
-
 
 using namespace lcio ;
 using namespace marlin ;
@@ -125,22 +122,6 @@ TruthTrackFinder::TruthTrackFinder() : Processor("TruthTrackFinder") {
                               bool(false));
   
 	
-}
-
-bool sort_by_radius(EVENT::TrackerHit* hit1, EVENT::TrackerHit* hit2){
-	double radius1 = sqrt((hit1->getPosition()[0])*(hit1->getPosition()[0]) + (hit1->getPosition()[1])*(hit1->getPosition()[1]));
-	double radius2 = sqrt((hit2->getPosition()[0])*(hit2->getPosition()[0]) + (hit2->getPosition()[1])*(hit2->getPosition()[1]));
-  //return (radius1 < radius2);
-  return CxxUtils::fpcompare::less(radius1 , radius2);
-}
-
-bool sort_by_z(EVENT::TrackerHit* hit1, EVENT::TrackerHit* hit2){
-  // sorting by absolute value of Z so the hits are always sorted from close to
-  // the IP outward. This works as long as all hits are either in positive or
-  // negative side
-  const double z1 = fabs(hit1->getPosition()[2]);
-  const double z2 = fabs(hit2->getPosition()[2]);
-  return CxxUtils::fpcompare::less(z1 , z2);
 }
 
 void TruthTrackFinder::init() {
