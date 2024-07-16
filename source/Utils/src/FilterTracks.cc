@@ -25,6 +25,12 @@ FilterTracks::FilterTracks()
 			     _BarrelOnly
 			      );  
   
+  registerProcessorParameter("HasCaloState",
+		  	     "If true, just keep tracks that have a TrackState at the Calorimeter surface",
+			     _HasCaloState,
+			     _HasCaloState
+			      );  
+
   registerProcessorParameter("NHitsTotal",
 		  	     "Minimum number of hits on track",
 			     _NHitsTotal,
@@ -47,6 +53,12 @@ FilterTracks::FilterTracks()
 		  	     "Minimum number of hits on outer tracker",
 			     _NHitsOuter,
 			     _NHitsOuter
+			      );
+
+  registerProcessorParameter("MaxHoles",
+		  	     "Maximum number of holes on track",
+			     _MaxHoles,
+			     _MaxHoles
 			      );
 
   registerProcessorParameter("MinPt",
@@ -132,6 +144,19 @@ void FilterTracks::processEvent( LCEvent * evt )
 
     float chi2spatial = trk->getChi2();
 
+    int nholes = trk->getNholes();
+
+    bool foundCaloState = false;
+    // Check if a TrackState at the calo surface exists
+    const std::vector<EVENT::TrackState*>& trackStates = trk->getTrackStates();
+    for (const auto& state : trackStates) {
+      if (state->getLocation() == EVENT::TrackState::AtCalorimeter) {
+        foundCaloState = true;
+        break;
+      }
+    }
+    if (_HasCaloState && !foundCaloState) { continue; }
+
     if(_BarrelOnly == true) {
       bool endcaphits = false;
       for(int j=0; j<nhittotal; ++j) {
@@ -149,7 +174,8 @@ void FilterTracks::processEvent( LCEvent * evt )
 	 nhitinner    > _NHitsInner  &&
 	 nhitouter    > _NHitsOuter  &&
 	 pt           > _MinPt       &&
-	 chi2spatial  > _Chi2Spatial)
+	 chi2spatial  > _Chi2Spatial &&
+   nholes       <= _MaxHoles)
 	{ OutputTrackCollection->addElement(trk); }
     }
   }

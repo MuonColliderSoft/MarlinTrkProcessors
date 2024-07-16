@@ -61,6 +61,7 @@ private:
    std::string _OutputTrackCollection {};
 
    bool _BarrelOnly = false;
+   bool _HasCaloState = false;
 
    //! Cut off for total number of hits
    int _NHitsTotal = 7;
@@ -70,6 +71,9 @@ private:
    int _NHitsInner = 2;
    //! Cut off for number of hits in outer tracker (barrel and endcap combined)
    int _NHitsOuter = 1;
+
+   //! Cut off for maximum number of holes on track
+   int _MaxHoles = 0;
 
    //! Cut off for momentum (GeV)
    float _MinPt = 1.0;   //units GeV
