@@ -70,14 +70,25 @@ private:
    int _NHitsInner = 2;
    //! Cut off for number of hits in outer tracker (barrel and endcap combined)
    int _NHitsOuter = 1;
+   //! Cut off for number of holes
+   int _MaxHoles = 1;
 
    //! Cut off for momentum (GeV)
    float _MinPt = 1.0;   //units GeV
 
+   //! Cut off for the value ndf
+   int _MinNdf = 1;  
+
    //! Cut off for spatial and temporal chi squared values
    float _Chi2Spatial = 0;
 
+   //! NN parameters
+   std::string _NNmethod = ""; // if defined apply the NN
+   std::string _NNweights = ""; // xml file with weights
+   std::vector<std::string> _NNvars; // sorted list of variables used by NN
+   float _NNthr = 0; // NN threshold   
+
    //! Default magnetic field value (Tesla)
-   float _Bz = 3.57;
+   float _Bz = 5.0;
 };
 

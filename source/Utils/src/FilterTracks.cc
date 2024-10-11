@@ -10,7 +10,12 @@
 #include <UTIL/CellIDDecoder.h>
 #include <UTIL/LCTrackerConf.h>
 
+#include "TMVA/Reader.h"
+
+#include <iostream> 
+
 FilterTracks aFilterTracks ;
+
 
 FilterTracks::FilterTracks()
   : Processor("FilterTracks")
@@ -56,11 +61,54 @@ FilterTracks::FilterTracks()
 		 	      );
 
   registerProcessorParameter("Chi2Spatial",
-		  	     "Spatial chi squared",
+		  	     "iMinimum value for Spatial chi squared",
 			     _Chi2Spatial,
 			     _Chi2Spatial
 		 	      );
 
+  registerProcessorParameter("MinNdf",
+             "Minimum value for ndf",
+           _MinNdf,
+           _MinNdf
+            );
+
+  registerProcessorParameter("MaxHoles",
+             "Max number of holes",
+           _MaxHoles,
+           _MaxHoles
+            );
+
+  registerProcessorParameter("Bz",
+             "Magnetic field in Tesla (default: 5)",
+           _Bz,
+           _Bz
+            );
+
+  registerProcessorParameter("NNmethod",
+           "Name of the NN method, if empty uses standard cuts",
+           _NNmethod,
+           std::string("")
+            );
+
+  registerProcessorParameter("NNweights",
+             "File xml with the weights of the NN",
+           _NNweights,
+           std::string("")
+            );
+
+  registerProcessorParameter("NNvars",
+             "Sorted list with the names of the variables used in the training"
+              "Supported variables are: trtvhn, trtihn, trtohn, trthn, trtnh, trch2, trndf",
+           _NNvars,
+           _NNvars
+            );
+
+  registerProcessorParameter("NNthr",
+             "NN threshold (Takes tracks with prediction > NNthr)",
+           _NNthr,
+           _NNthr
+            );
+  
   registerInputCollection( LCIO::TRACK,
 		  	   "InputTrackCollectionName" ,
 			   "Name of the input collection",
@@ -81,7 +129,7 @@ void FilterTracks::init()
 {
   // Print the initial parameters
   printParameters() ;
-  buildBfield() ;
+  //buildBfield() ;
 }
 
 void FilterTracks::processRunHeader( LCRunHeader* /*run*/)
@@ -108,6 +156,8 @@ void FilterTracks::processEvent( LCEvent * evt )
   LCCollectionVec *OutputTrackCollection = new LCCollectionVec(LCIO::TRACK);
   OutputTrackCollection->setSubset(true);
 
+  TMVA::Reader* reader = new TMVA::Reader();
+
   // Get input collection
   LCCollection* InputTrackCollection  =evt->getCollection(_InputTrackCollection);
 
@@ -118,45 +168,78 @@ void FilterTracks::processEvent( LCEvent * evt )
   std::string encoderString = lcio::LCTrackerCellID::encoding_string();
   UTIL::CellIDDecoder<lcio::TrackerHit> decoder(encoderString);
 
+  std::unordered_map<std::string, float> vars = {
+    {"trtvhn", 0},
+    {"trtihn", 0},
+    {"trtohn", 0},
+    {"trthn", 0},
+    {"trtnh", 0},
+    {"trch2", 0},
+    {"trndf", 0},
+  };
+
+  if ( not _NNmethod.empty() ) {
+
+    for (unsigned i=0,N=_NNvars.size(); i<N; ++i) {
+      std::string name = _NNvars[i];
+      if (vars.find(name) == vars.end())
+        throw EVENT::Exception( "NN variable not supported: " + name ) ;  
+      reader->AddVariable( name, &vars[name] );
+    }
+    reader->BookMVA(_NNmethod, _NNweights);
+  }
+
   for(int i=0; i<InputTrackCollection->getNumberOfElements(); i++) {
     EVENT::Track *trk=dynamic_cast<EVENT::Track*>(InputTrackCollection->getElementAt(i));
 
-    int nhittotal  = trk->getTrackerHits().size();
+    vars["trtnh"]  = trk->getTrackerHits().size();
 
     const EVENT::IntVec& subdetectorHits = trk->getSubdetectorHitNumbers();
-    int nhitvertex = subdetectorHits[1]+subdetectorHits[2];
-    int nhitinner = subdetectorHits[3]+subdetectorHits[4];
-    int nhitouter = subdetectorHits[5]+subdetectorHits[6];
+    vars["trtvhn"] = subdetectorHits[1]+subdetectorHits[2];
+    vars["trtihn"] = subdetectorHits[3]+subdetectorHits[4];
+    vars["trtohn"] = subdetectorHits[5]+subdetectorHits[6];
 
+    vars["trthn"] = trk->getNholes();
     float pt = fabs(0.3*_Bz/trk->getOmega()/1000);
 
-    float chi2spatial = trk->getChi2();
+    vars["trch2"] = trk->getChi2();
+
+    vars["trndf"] = trk->getNdf();
 
     if(_BarrelOnly == true) {
       bool endcaphits = false;
-      for(int j=0; j<nhittotal; ++j) {
-	//Find what subdetector the hit is on 
-	uint32_t systemID = decoder(trk->getTrackerHits()[j])["system"];
-	if(systemID == 2 || systemID == 4 || systemID == 6) {
-	  endcaphits = true;
-	  break;
-	}
+      for(int j=0; j<vars["trtnh"]; ++j) {
+	      //Find what subdetector the hit is on 
+	      uint32_t systemID = decoder(trk->getTrackerHits()[j])["system"];
+	      if(systemID == 2 || systemID == 4 || systemID == 6) {
+	        endcaphits = true;
+	        break;
+	      }
       }
       if(endcaphits == false) { OutputTrackCollection->addElement(trk); }
     } else { // track property cuts
-      if(nhittotal    > _NHitsTotal  &&
-	 nhitvertex   > _NHitsVertex &&
-	 nhitinner    > _NHitsInner  &&
-	 nhitouter    > _NHitsOuter  &&
-	 pt           > _MinPt       &&
-	 chi2spatial  > _Chi2Spatial)
-	{ OutputTrackCollection->addElement(trk); }
+      if ( not _NNmethod.empty() ) { // NN cuts
+        auto prediction = reader->EvaluateMVA(_NNmethod);
+        if ( prediction > _NNthr )
+          OutputTrackCollection->addElement(trk); 
+      } else { // user cuts
+        if (vars["trtnh"]  > _NHitsTotal  &&
+	          vars["trtvhn"] > _NHitsVertex &&
+	          vars["trtihn"] > _NHitsInner  &&
+	          vars["trtohn"] > _NHitsOuter  &&
+	          pt             > _MinPt       &&
+	          vars["trch2"]  > _Chi2Spatial &&
+            vars["trndf"]  > _MinNdf      &&
+            vars["trthn"]  < _MaxHoles)
+	         { OutputTrackCollection->addElement(trk); }
+      }
     }
   }
 
   // Save output track collection
   evt->addCollection(OutputTrackCollection, _OutputTrackCollection);  
+  delete reader;
 }
 
 void FilterTracks::end()
-{ }
+{  }
