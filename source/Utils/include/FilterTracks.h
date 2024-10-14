@@ -74,7 +74,8 @@ private:
    int _MaxHoles = 1;
 
    //! Cut off for momentum (GeV)
-   float _MinPt = 1.0;   //units GeV
+   float _MinPt = 0.5;    //units GeV
+   float _MaxPt = 1000.0; //units GeV
 
    //! Cut off for the value ndf
    int _MinNdf = 1;  

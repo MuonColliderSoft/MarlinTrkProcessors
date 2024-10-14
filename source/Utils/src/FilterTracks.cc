@@ -60,6 +60,12 @@ FilterTracks::FilterTracks()
 			     _MinPt
 		 	      );
 
+  registerProcessorParameter("MaxPt",
+             "Max transverse momentum",
+           _MaxPt,
+           _MaxPt
+            );
+
   registerProcessorParameter("Chi2Spatial",
 		  	     "iMinimum value for Spatial chi squared",
 			     _Chi2Spatial,
@@ -129,7 +135,8 @@ void FilterTracks::init()
 {
   // Print the initial parameters
   printParameters() ;
-  //buildBfield() ;
+  // it require that geometry is initialized
+  // buildBfield() ;
 }
 
 void FilterTracks::processRunHeader( LCRunHeader* /*run*/)
@@ -228,6 +235,7 @@ void FilterTracks::processEvent( LCEvent * evt )
 	          vars["trtihn"] > _NHitsInner  &&
 	          vars["trtohn"] > _NHitsOuter  &&
 	          pt             > _MinPt       &&
+            pt             < _MaxPt       &&
 	          vars["trch2"]  > _Chi2Spatial &&
             vars["trndf"]  > _MinNdf      &&
             vars["trthn"]  < _MaxHoles)
