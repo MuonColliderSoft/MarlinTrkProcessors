@@ -31,12 +31,17 @@ FilterClusters::FilterClusters()
   registerProcessorParameter("ThetaRanges",
          "Divide theta into bins for different cluster size cuts",
          _ThetaRanges, 
-         {}
+	  {}
+          );
+  registerProcessorParameter("ThetaBins",
+         "Number of bins in theta",
+         _ThetaBins,
+          {}
           );
   registerProcessorParameter("ClusterSize",
 		  	 "Maximum cluster size for each theta range",
 			   _ClusterSize,
-			   {}
+			     {}
 			    );  
   registerProcessorParameter("Layers",
 		  	 "Layers to be filtered",
@@ -102,7 +107,7 @@ void FilterClusters::processEvent( LCEvent * evt )
     streamlog_out(DEBUG0) << "Wrong collection type for InRelationCollection. \n";
 
 
-  streamlog_out(DEBUG0) << "Number of Elements in VB Tracker Hits Collection: " << InTrackerHitCollection->getNumberOfElements() <<std::endl;
+  streamlog_out(DEBUG0) << "Number of Elements in Tracker Hits Collection: " << InTrackerHitCollection->getNumberOfElements() <<std::endl;
   // Filter
   for(int i=0; i<InTrackerHitCollection->getNumberOfElements(); ++i) //loop through all hits
     {
@@ -122,21 +127,33 @@ void FilterClusters::processEvent( LCEvent * evt )
 
       //Calculating cluster size
       const lcio::LCObjectVec &rawHits = trkhit->getRawHits();
-      float max = -1000000;
-      float min = 1000000;
+      float ymax = -1000000;
+      float xmax = -1000000;
+      float ymin =  1000000;
+      float xmin =  1000000;
       for (size_t j=0; j<rawHits.size(); ++j) {
         lcio::SimTrackerHit *hitConstituent = dynamic_cast<lcio::SimTrackerHit*>( rawHits[j] );
         const double *localPos = hitConstituent->getPosition();
-        x = localPos[0];
-        y = localPos[1];
-        if (y < min){
-          min = y;
-        }
-        else if (y > max){
-          max = y;          
-        }
+	float x_local = localPos[0];
+	float y_local = localPos[1];
+
+	if (y_local < ymin){
+	  ymin = y_local;
+	}
+	if (y_local > ymax){
+	  ymax = y_local;
+	}
+	
+	if (x_local < xmin){
+	  xmin = x_local;
+	}
+	if (x_local > xmax){
+	  xmax = x_local;
+	}
       }
-      float cluster_size = (max - min)+1;
+      float cluster_size_y = (ymax - ymin)+1;
+      float cluster_size_x = (xmax - xmin)+1;
+      float cluster_size = rawHits.size();
 
       //Get hit subdetector/layer 
       std::string _encoderString = lcio::LCTrackerCellID::encoding_string();
@@ -144,24 +161,52 @@ void FilterClusters::processEvent( LCEvent * evt )
       uint32_t systemID = decoder(trkhit)["system"];
       uint32_t layerID = decoder(trkhit)["layer"];
       bool filter_layer = false;
+
+      int rows = _Layers.size(), cols = std::stoi(_ThetaBins);
+      if((rows*cols != _ThetaRanges.size()) || (rows*(cols-1) != _ClusterSize.size())){
+	std::cout<<"Either theta cuts or cluster cuts not provided for each layer. Please change the config, exiting now..."<<std::endl;
+	return;
+      }
+      
+      std::vector<std::vector<float>> _thetaCuts_byLayer;
+      std::vector<std::vector<float>> _clusterSizeCuts_byLayer;
+
+      for (int i = 0; i < rows; ++i) {
+	std::vector<float> row;
+	for (int j = 0; j < cols; ++j) {
+	  row.push_back(std::stof(_ThetaRanges[j]));
+	}
+	_thetaCuts_byLayer.push_back(row);
+      }
+
+      for (int i = 0; i < rows; ++i) {
+        std::vector<float> row;
+        for (int j = 0; j < cols; ++j) {
+          row.push_back(std::stof(_ClusterSize[j]));
+	}
+        _clusterSizeCuts_byLayer.push_back(row);
+      }
+
+	
       for (size_t j=0; j<_Layers.size(); ++j){
         if (layerID == std::stof(_Layers[j])) {
           filter_layer = true;
+	  break;
         }
       }
       streamlog_out(DEBUG0) << "Filter layer: " << filter_layer << std::endl;
-      
-      for (size_t j=0; j<_ThetaRanges.size()-1; ++j) {
-        streamlog_out( DEBUG0 ) << "theta: " << incidentTheta << std::endl;
-        float min_theta = std::stof(_ThetaRanges[j]);
-        float max_theta = std::stof(_ThetaRanges[j+1]);
-        streamlog_out( DEBUG0 ) << "theta range: " << min_theta << ", " << max_theta << std::endl;
 
-        if(incidentTheta > min and incidentTheta <= max and not filter_layer){
+      for (size_t j=0; j<_thetaCuts_byLayer[layerID].size()-1; ++j) {
+        streamlog_out( DEBUG0 ) << "theta: " << incidentTheta << std::endl;
+	float min_theta = _thetaCuts_byLayer[layerID][j];
+	float max_theta = _thetaCuts_byLayer[layerID][j+1];
+        streamlog_out( DEBUG0 ) << "theta range: " << min_theta << ", " << max_theta << std::endl;
+	
+        if(incidentTheta >= min_theta and incidentTheta <= max_theta and filter_layer){
           streamlog_out( DEBUG0 ) << "theta in range" << std::endl;
-          streamlog_out( DEBUG0 ) << "cluster size cut off: " << _ClusterSize[j] << std::endl;
+	  streamlog_out( DEBUG0 ) << "cluster size cut off: " << _clusterSizeCuts_byLayer[layerID][j] << std::endl;
           streamlog_out( DEBUG0 ) << "cluster size: " << cluster_size << std::endl;
-          if(cluster_size < std::stof(_ClusterSize[j])) {
+          if(cluster_size < _clusterSizeCuts_byLayer[layerID][j]) {
             streamlog_out( DEBUG0 ) << "cluster added" << std::endl;
             OutTrackerHitCollection->addElement(trkhit); 
             OutRelationCollection->addElement(rel); }
@@ -170,7 +215,7 @@ void FilterClusters::processEvent( LCEvent * evt )
           }
         }
         else{
-          streamlog_out( DEBUG0 ) << "theta out of range or layer filtered" << std::endl;
+          streamlog_out( DEBUG0 ) << "theta out of range or filtering not enabled for this layer" << std::endl;
         }
       }
     }
