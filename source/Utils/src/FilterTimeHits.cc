@@ -271,6 +271,12 @@ void FilterTimeHits::processEvent(LCEvent *evt)
             hit_new->setTime(hit->getTime());
             hit_new->setQuality(hit->getQuality());
 
+	    const lcio::LCObjectVec &rawHits = hit->getRawHits();
+	    for (size_t j=0; j<rawHits.size(); ++j) {
+	      lcio::SimTrackerHit *hitConstituent = dynamic_cast<lcio::SimTrackerHit*>( rawHits[j] );
+	      hit_new->rawHits().push_back(hitConstituent);
+	    }
+
             outputTrackerHitColls[icol]->addElement(hit_new);
 
             LCRelation *rel = dynamic_cast<LCRelation *>(inputHitRels[icol]->getElementAt(ihit));
