@@ -276,7 +276,6 @@ void FilterTimeHits::processEvent(LCEvent *evt)
 	      lcio::SimTrackerHit *hitConstituent = dynamic_cast<lcio::SimTrackerHit*>( rawHits[j] );
 	      hit_new->rawHits().push_back(hitConstituent);
 	    }
-
             outputTrackerHitColls[icol]->addElement(hit_new);
 
             LCRelation *rel = dynamic_cast<LCRelation *>(inputHitRels[icol]->getElementAt(ihit));
