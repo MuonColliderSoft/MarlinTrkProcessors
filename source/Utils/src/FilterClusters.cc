@@ -13,6 +13,7 @@
 #include <UTIL/LCTrackerConf.h>
 #include <UTIL/CellIDDecoder.h>
 #include <IMPL/LCRelationImpl.h>
+#include <IMPL/LCFlagImpl.h>
 
 #include <marlin/AIDAProcessor.h>
 
@@ -121,14 +122,6 @@ void FilterClusters::processRunHeader( LCRunHeader* /*run*/)
 
 void FilterClusters::processEvent( LCEvent * evt )
 {
-  // Make the output track collection
-  LCCollectionVec *OutTrackerHitCollection = new LCCollectionVec(LCIO::TRACKERHIT);
-  OutTrackerHitCollection->setSubset(true);
-  LCCollectionVec *OutRelationCollection   = new LCCollectionVec(LCIO::LCRELATION);
-  OutRelationCollection->setSubset(true);
-  LCCollectionVec *OutSimTrackerHitCollection = new LCCollectionVec(LCIO::SIMTRACKERHIT);
-  OutSimTrackerHitCollection->setSubset(true);
-
   // Get input collection
   LCCollection* InTrackerHitCollection  = evt->getCollection(_InTrackerHitCollection);
   LCCollection* InRelationCollection    = evt->getCollection(_InRelationCollection);
@@ -146,6 +139,28 @@ void FilterClusters::processEvent( LCEvent * evt )
 
 
   streamlog_out(DEBUG0) << "Number of Elements in Tracker Hits Collection: " << InTrackerHitCollection->getNumberOfElements() <<std::endl;
+
+
+  // Make the output collections: reco hits, sim hits, reco-sim relationship
+  std::string encoderString = InTrackerHitCollection->getParameters().getStringVal("CellIDEncoding");  
+  LCCollectionVec *OutTrackerHitCollection = new LCCollectionVec(LCIO::TRACKERHIT);
+  OutTrackerHitCollection->parameters().setValue("CellIDEncoding", encoderString);
+  LCFlagImpl lcFlag(InTrackerHitCollection->getFlag());
+  OutTrackerHitCollection->setFlag(lcFlag.getFlag());  
+  //OutTrackerHitCollection->setSubset(true);
+
+  LCCollectionVec *OutSimTrackerHitCollection = new LCCollectionVec(LCIO::SIMTRACKERHIT);
+  OutSimTrackerHitCollection->parameters().setValue("CellIDEncoding", encoderString);
+  LCFlagImpl lcFlag_sim(InSimTrackerHitCollection->getFlag());
+  OutSimTrackerHitCollection->setFlag(lcFlag_sim.getFlag());
+  //OutSimTrackerHitCollection->setSubset(true);
+  
+  LCCollectionVec *OutRelationCollection   = new LCCollectionVec(LCIO::LCRELATION);
+  LCFlagImpl lcFlag_rel(InRelationCollection->getFlag());
+  OutRelationCollection->setFlag(lcFlag_rel.getFlag());  
+  //OutRelationCollection->setSubset(true);
+
+  
   // Filter
   for(int i=0; i<InTrackerHitCollection->getNumberOfElements(); ++i) //loop through all hits
     {
@@ -250,8 +265,7 @@ void FilterClusters::processEvent( LCEvent * evt )
 	  streamlog_out( DEBUG0 ) << "cluster size cut off: " << _clusterSizeCuts_byLayer[layerID][j] << std::endl;
           streamlog_out( DEBUG0 ) << "cluster size: " << cluster_size << std::endl;
           if(cluster_size < _clusterSizeCuts_byLayer[layerID][j]) {
-            streamlog_out( DEBUG0 ) << "cluster added" << std::endl;
-            OutTrackerHitCollection->addElement(trkhit);
+            streamlog_out( DEBUG0 ) << "Adding reco/sim clusters and relation to output collections" << std::endl;
 
 	    if (m_fillHistos){
 	      m_clusterTheta_afterCut->Fill(incidentTheta);
@@ -293,6 +307,7 @@ void FilterClusters::processEvent( LCEvent * evt )
               lcio::SimTrackerHit *hitConstituent = dynamic_cast<lcio::SimTrackerHit*>( rawHits_new[k] );
               hit_new->rawHits().push_back(hitConstituent);
             }
+            OutTrackerHitCollection->addElement(hit_new);
 
             LCRelationImpl *rel_new = new LCRelationImpl();
             rel_new->setFrom(hit_new);
