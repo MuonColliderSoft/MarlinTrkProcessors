@@ -105,7 +105,6 @@ void FilterClusters::init()
   // Print the initial parameters
   printParameters() ;
 
-  AIDA::ITree* tree=marlin::AIDAProcessor::tree(this);
   marlin::AIDAProcessor::histogramFactory(this);
 
   m_clusterTheta_beforeCut = new TH1F("m_ClusterTheta_before", "Cluster Theta [radian]", 32, 0., 3.2);
