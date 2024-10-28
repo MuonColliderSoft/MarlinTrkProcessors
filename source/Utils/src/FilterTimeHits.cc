@@ -96,7 +96,9 @@ void FilterTimeHits::init()
 
     AIDAProcessor::histogramFactory(this);
 
-    m_corrected_time = new TH1F("m_corrected_time", "Corrected time of the hit [ps]", 1000, -250., 250.);
+    m_corrected_time_before = new TH1F("m_corrected_time_before", "Corrected time of the hit before filter [ns]", 1000, -25., 25.);
+    m_corrected_time_after = new TH1F("m_corrected_time_after", "Corrected time of the hit after filter [ns]", 1000, -25., 25.);
+
 }
 
 void FilterTimeHits::processRunHeader(LCRunHeader *run)
@@ -230,6 +232,9 @@ void FilterTimeHits::processEvent(LCEvent *evt)
                 hitT -= dt;
                 streamlog_out(DEBUG3) << "corrected hit at R: " << hitR << " mm by propagation time: " << dt << " ns to T: " << hitT << " ns" << std::endl;
 
+		if (m_fillHistos)
+		  m_corrected_time_before->Fill(hitT);
+
                 //Apply time window selection
                 if (hitT < m_time_min || hitT > m_time_max)
                 {
@@ -240,7 +245,7 @@ void FilterTimeHits::processEvent(LCEvent *evt)
                 hits_to_save[icol].insert(ihit);
 
                 if (m_fillHistos)
-                    m_corrected_time->Fill(hitT);
+		  m_corrected_time_after->Fill(hitT);
             }
 
         } // ihit loop

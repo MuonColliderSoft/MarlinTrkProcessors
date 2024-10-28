@@ -69,7 +69,8 @@ protected:
     double m_time_max{};
 
     // --- Diagnostic histograms:
-    TH1F *m_corrected_time = nullptr;
+    TH1F *m_corrected_time_before = nullptr;
+    TH1F *m_corrected_time_after = nullptr;
 
     // --- Run and event counters:
     int _nRun{};
