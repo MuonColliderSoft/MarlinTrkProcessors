@@ -127,14 +127,14 @@ void FilterClusters::processEvent( LCEvent * evt )
   LCCollection* InSimTrackerHitCollection  = evt->getCollection(_InSimTrackerHitCollection);
 
   if( InTrackerHitCollection->getTypeName() != lcio::LCIO::TRACKERHITPLANE )
-    { throw EVENT::Exception( "Invalid collection type: " + InTrackerHitCollection->getTypeName() ) ; }
-    streamlog_out(DEBUG0) << "Wrong collection type for TrackerHitCollection. \n";
+    { throw EVENT::Exception( "Invalid collection type: " + InTrackerHitCollection->getTypeName() ) ; 
+      streamlog_out(DEBUG0) << "Wrong collection type for TrackerHitCollection. \n";}
   if( InRelationCollection->getTypeName() != lcio::LCIO::LCRELATION )
-    { throw EVENT::Exception( "Invalid collection type: " + InRelationCollection->getTypeName() ) ; }
-    streamlog_out(DEBUG0) << "Wrong collection type for InRelationCollection. \n";
+    { throw EVENT::Exception( "Invalid collection type: " + InRelationCollection->getTypeName() ) ; 
+      streamlog_out(DEBUG0) << "Wrong collection type for InRelationCollection. \n";}
   if( InSimTrackerHitCollection->getTypeName() != lcio::LCIO::SIMTRACKERHIT )
-    { throw EVENT::Exception( "Invalid collection type: " + InSimTrackerHitCollection->getTypeName() ) ; }
-    streamlog_out(DEBUG0) << "Wrong collection type for SimTrackerHitCollection. \n";
+    { throw EVENT::Exception( "Invalid collection type: " + InSimTrackerHitCollection->getTypeName() ) ; 
+      streamlog_out(DEBUG0) << "Wrong collection type for SimTrackerHitCollection. \n";}
 
 
   streamlog_out(DEBUG0) << "Number of Elements in Tracker Hits Collection: " << InTrackerHitCollection->getNumberOfElements() <<std::endl;
