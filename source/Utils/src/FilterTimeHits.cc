@@ -98,12 +98,77 @@ void FilterTimeHits::init()
 
     m_corrected_time_before = new TH1F("m_corrected_time_before", "Corrected time of the hit before filter [ns]", 1000, -25., 25.);
     m_corrected_time_after = new TH1F("m_corrected_time_after", "Corrected time of the hit after filter [ns]", 1000, -25., 25.);
-
 }
 
 void FilterTimeHits::processRunHeader(LCRunHeader *run)
 {
     _nRun++;
+}
+
+TrackerHitPlane *FilterTimeHits::copyTrackerHitPlane(TrackerHitPlane *hit)
+{
+    // Create new object
+    TrackerHitPlaneImpl *hit_new = new TrackerHitPlaneImpl();
+
+    // Make a copy (no copy-constructor)
+    hit_new->setCellID0(hit->getCellID0());
+    hit_new->setCellID1(hit->getCellID1());
+    hit_new->setType(hit->getType());
+    hit_new->setPosition(hit->getPosition());
+    hit_new->setU(hit->getU());
+    hit_new->setV(hit->getV());
+    hit_new->setdU(hit->getdU());
+    hit_new->setdV(hit->getdV());
+    hit_new->setEDep(hit->getEDep());
+    hit_new->setEDepError(hit->getEDepError());
+    hit_new->setTime(hit->getTime());
+    hit_new->setQuality(hit->getQuality());
+    const_cast<EVENT::FloatVec &>(hit_new->getCovMatrix()) = hit->getCovMatrix(); // no setter for covariance matrix?
+
+    // need to clone individual hits, if present
+    const lcio::LCObjectVec &rawHits = hit->getRawHits();
+    for (size_t j = 0; j < rawHits.size(); ++j)
+    {
+        // Use (default) copy-constructor of SimTrackerHitImpl
+        lcio::SimTrackerHit *hitConstituent = copySimTrackerHit(dynamic_cast<SimTrackerHit *>(rawHits[j]));
+        if (!hitConstituent)
+        {
+            static bool first_error = true;
+            if (first_error)
+            {
+                streamlog_out(WARNING) << "Cannot access individual hits of reco ID clusters. Skipping (no further WARNING will be printed.)" << std::endl;
+                continue;
+            }
+        }
+        hit_new->rawHits().push_back(hitConstituent);
+    }
+
+    // return new object
+    return hit_new;
+}
+
+SimTrackerHit *FilterTimeHits::copySimTrackerHit(SimTrackerHit *hit)
+{
+    // use (default) copy-constructor
+    lcio::SimTrackerHitImpl *simhit_new = new lcio::SimTrackerHitImpl(*(dynamic_cast<lcio::SimTrackerHitImpl *>(hit)));
+
+    /*
+    // manual copy, deprecated
+    SimTrackerHitImpl *simhit_new = new SimTrackerHitImpl();
+    simhit_new->setCellID0(simhit->getCellID0());
+    simhit_new->setCellID1(simhit->getCellID1());
+    simhit_new->setPosition(simhit->getPosition());
+    simhit_new->setEDep(simhit->getEDep());
+    simhit_new->setTime(simhit->getTime());
+    simhit_new->setMCParticle(simhit->getMCParticle());
+    simhit_new->setMomentum(simhit->getMomentum());
+    simhit_new->setPathLength(simhit->getPathLength());
+    simhit_new->setQuality(simhit->getQuality());
+    simhit_new->setOverlay(simhit->isOverlay());
+    simhit_new->setProducedBySecondary(simhit->isProducedBySecondary());
+    */
+
+    return simhit_new;
 }
 
 void FilterTimeHits::processEvent(LCEvent *evt)
@@ -142,10 +207,12 @@ void FilterTimeHits::processEvent(LCEvent *evt)
 
     const unsigned int nTrackerHitCol = m_inputTrackerHitsCollNames.size();
     std::vector<LCCollection *> inputHitColls(nTrackerHitCol);
+    std::vector<LCCollection *> inputHitConstituentsColls(nTrackerHitCol);
     std::vector<LCCollection *> inputSimHitColls(nTrackerHitCol);
     std::vector<LCCollection *> inputHitRels(nTrackerHitCol);
 
     std::vector<LCCollectionVec *> outputTrackerHitColls(nTrackerHitCol);
+    std::vector<LCCollectionVec *> outputTrackerHitConstituentsColls(nTrackerHitCol);
     std::vector<LCCollectionVec *> outputTrackerSimHitColls(nTrackerHitCol);
     std::vector<LCCollectionVec *> outputTrackerHitRels(nTrackerHitCol);
 
@@ -161,31 +228,52 @@ void FilterTimeHits::processEvent(LCEvent *evt)
         {
             streamlog_out(WARNING) << m_inputTrackerHitsCollNames[icol]
                                    << " collection not available" << std::endl;
-            continue;
+            continue; // this is mandatory to do anything
+        }
+
+        // get the reco hits contituents (if available)
+        try
+        {
+            if (m_inputTrackerHitsConstituentsCollNames[icol] != "")
+                inputHitConstituentsColls[icol] = evt->getCollection(m_inputTrackerHitsConstituentsCollNames[icol]);
+            else
+                inputHitConstituentsColls[icol] = nullptr;
+        }
+        catch (lcio::DataNotAvailableException &e)
+        {
+            streamlog_out(WARNING) << m_inputTrackerHitsConstituentsCollNames[icol]
+                                   << " collection not available. This is expected in simplified digitization settings." << std::endl;
+            inputHitConstituentsColls[icol] = nullptr; // optional collection
         }
 
         // get the sim hits
         try
         {
-            inputSimHitColls[icol] = evt->getCollection(m_inputTrackerSimHitsCollNames[icol]);
+            if (m_inputTrackerSimHitsCollNames[icol] != "")
+                inputSimHitColls[icol] = evt->getCollection(m_inputTrackerSimHitsCollNames[icol]);
+            else
+                inputSimHitColls[icol] = nullptr;
         }
         catch (lcio::DataNotAvailableException &e)
         {
             streamlog_out(WARNING) << m_inputTrackerSimHitsCollNames[icol]
                                    << " collection not available" << std::endl;
-            continue;
+            inputSimHitColls[icol] = nullptr; // optional collection
         }
 
         // get the reco-sim relations
         try
         {
-            inputHitRels[icol] = evt->getCollection(m_inputTrackerHitRelNames[icol]);
+            if (m_inputTrackerHitRelNames[icol] != "")
+                inputHitRels[icol] = evt->getCollection(m_inputTrackerHitRelNames[icol]);
+            else
+                inputHitRels[icol] = nullptr;
         }
         catch (lcio::DataNotAvailableException &e)
         {
             streamlog_out(WARNING) << m_inputTrackerHitRelNames[icol]
                                    << " collection not available" << std::endl;
-            continue;
+            inputHitRels[icol] = nullptr; // optional collection
         }
 
         // reco hit output collections
@@ -195,129 +283,140 @@ void FilterTimeHits::processEvent(LCEvent *evt)
         LCFlagImpl lcFlag(inputHitColls[icol]->getFlag());
         outputTrackerHitColls[icol]->setFlag(lcFlag.getFlag());
 
+        // reco hit contituents output collections, if needed
+        if ((m_outputTrackerHitsConstituentsCollNames[icol] != "") &&
+            (inputHitConstituentsColls[icol] != nullptr)) {
+            std::string encoderString = inputHitConstituentsColls[icol]->getParameters().getStringVal("CellIDEncoding");
+            outputTrackerHitConstituentsColls[icol] = new LCCollectionVec(inputHitConstituentsColls[icol]->getTypeName());
+            outputTrackerHitConstituentsColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
+            LCFlagImpl lcFlag(inputHitConstituentsColls[icol]->getFlag());
+            outputTrackerHitConstituentsColls[icol]->setFlag(lcFlag.getFlag());
+        } else {
+            outputTrackerHitConstituentsColls[icol] = nullptr;
+        }
+
         // sim hit output collections
-        outputTrackerSimHitColls[icol] = new LCCollectionVec(inputSimHitColls[icol]->getTypeName());
-        outputTrackerSimHitColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
-        LCFlagImpl lcFlag_sim(inputSimHitColls[icol]->getFlag());
-        outputTrackerSimHitColls[icol]->setFlag(lcFlag_sim.getFlag());
+        if (inputSimHitColls[icol] != nullptr) {
+            outputTrackerSimHitColls[icol] = new LCCollectionVec(inputSimHitColls[icol]->getTypeName());
+            outputTrackerSimHitColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
+            LCFlagImpl lcFlag_sim(inputSimHitColls[icol]->getFlag());
+            outputTrackerSimHitColls[icol]->setFlag(lcFlag_sim.getFlag());
+        }
 
         // reco-sim relation output collections
-        outputTrackerHitRels[icol] = new LCCollectionVec(inputHitRels[icol]->getTypeName());
-        LCFlagImpl lcFlag_rel(inputHitRels[icol]->getFlag());
-        outputTrackerHitRels[icol]->setFlag(lcFlag_rel.getFlag());
+        if (inputHitRels[icol] != nullptr) {
+            outputTrackerHitRels[icol] = new LCCollectionVec(inputHitRels[icol]->getTypeName());
+            LCFlagImpl lcFlag_rel(inputHitRels[icol]->getFlag());
+            outputTrackerHitRels[icol]->setFlag(lcFlag_rel.getFlag());
+        }
     }
 
     // --- Loop over the tracker hits and select hits inside the chosen time window:
-    std::vector<std::set<int>> hits_to_save(nTrackerHitCol);
-
+    // IMPORTANT: Cannot assume SimTrkHit and Relation collections contain corresponding elements in the same order. Some sim hits might not have a corrsponding reco hit.
     for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol)
     {
+        // Keep track of (old, new) object pointers for clusters to save in the output collections
+        std::map<TrackerHitPlane *, TrackerHitPlane *> reco_clusters_to_save;
 
         LCCollection *hit_col = inputHitColls[icol];
         if (!hit_col)
+        {
+            streamlog_out(WARNING) << "Cannot retrieve collection: " << m_inputTrackerHitsCollNames[icol] << std::endl;
             continue;
+        }
 
         for (int ihit = 0; ihit < hit_col->getNumberOfElements(); ++ihit)
         {
 
-            if (TrackerHitPlane *hit = dynamic_cast<TrackerHitPlane *>(hit_col->getElementAt(ihit))){
-                // Skipping the hit if its time is outside the acceptance time window
-                double hitT = hit->getTime();
+            TrackerHitPlane *hit = dynamic_cast<TrackerHitPlane *>(hit_col->getElementAt(ihit));
+            if (!hit)
+            {
+                streamlog_out(WARNING) << "Cannot retrieve/cast(TrackerHitPlane*) cluster from collection: " << m_inputTrackerHitsCollNames[icol] << std::endl;
+                continue;
+            }
+            // Skipping the hit if its time is outside the acceptance time window
+            double hitT = hit->getTime();
 
-                dd4hep::rec::Vector3D pos = hit->getPosition();
-                double hitR = pos.r();
+            dd4hep::rec::Vector3D pos = hit->getPosition();
+            double hitR = pos.r();
 
-                // Correcting for the propagation time
-                double dt = hitR / (TMath::C() * m_beta / 1e6);
-                hitT -= dt;
-                streamlog_out(DEBUG3) << "corrected hit at R: " << hitR << " mm by propagation time: " << dt << " ns to T: " << hitT << " ns" << std::endl;
+            // Correcting for the propagation time
+            double dt = hitR / (TMath::C() * m_beta / 1e6);
+            hitT -= dt;
+            streamlog_out(DEBUG3) << "corrected hit at R: " << hitR << " mm by propagation time: " << dt << " ns to T: " << hitT << " ns" << std::endl;
 
-		if (m_fillHistos)
-		  m_corrected_time_before->Fill(hitT);
+            if (m_fillHistos)
+                m_corrected_time_before->Fill(hitT);
 
-                //Apply time window selection
-                if (hitT < m_time_min || hitT > m_time_max)
-                {
-                    streamlog_out(DEBUG4) << "hit at T: " << hitT << " ns is rejected by timing cuts" << std::endl;
-                    continue;
-                }
-
-                hits_to_save[icol].insert(ihit);
-
-                if (m_fillHistos)
-		  m_corrected_time_after->Fill(hitT);
+            // Apply time window selection
+            if (hitT < m_time_min || hitT > m_time_max)
+            {
+                streamlog_out(DEBUG4) << "hit at T: " << hitT << " ns is rejected by timing cuts" << std::endl;
+                continue;
             }
 
-        } // ihit loop
+            if (m_fillHistos)
+                m_corrected_time_after->Fill(hitT);
 
-    } // icol loop
-
-    // --- Add the filtered hits to the output collections:
-
-    for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol)
-    {
-
-        for (auto &ihit : hits_to_save[icol])
-        {
-
-            TrackerHitPlane *hit = dynamic_cast<TrackerHitPlane *>(inputHitColls[icol]->getElementAt(ihit));
-            TrackerHitPlaneImpl *hit_new = new TrackerHitPlaneImpl();
-
-            hit_new->setCellID0(hit->getCellID0());
-            hit_new->setCellID1(hit->getCellID1());
-            hit_new->setType(hit->getType());
-            hit_new->setPosition(hit->getPosition());
-            hit_new->setU(hit->getU());
-            hit_new->setV(hit->getV());
-            hit_new->setdU(hit->getdU());
-            hit_new->setdV(hit->getdV());
-            hit_new->setEDep(hit->getEDep());
-            hit_new->setEDepError(hit->getEDepError());
-            hit_new->setTime(hit->getTime());
-            hit_new->setQuality(hit->getQuality());
-
-	    const lcio::LCObjectVec &rawHits = hit->getRawHits();
-	    for (size_t j=0; j<rawHits.size(); ++j) {
-	      lcio::SimTrackerHit *hitConstituent = dynamic_cast<lcio::SimTrackerHit*>( rawHits[j] );
-	      hit_new->rawHits().push_back(hitConstituent);
-	    }
+            // Save a copy of the cluster into the output collection
+            TrackerHitPlane *hit_new = copyTrackerHitPlane(hit);
             outputTrackerHitColls[icol]->addElement(hit_new);
+            if (outputTrackerHitConstituentsColls[icol])
+            {
+                // save hits contituents as well
+                const EVENT::LCObjectVec &rawHits = hit_new->getRawHits();
+                for (unsigned int ihit = 0; ihit < rawHits.size(); ++ihit)
+                    outputTrackerHitConstituentsColls[icol]->addElement(rawHits[ihit]);
+            }
 
-            LCRelation *rel = dynamic_cast<LCRelation *>(inputHitRels[icol]->getElementAt(ihit));
-
-            SimTrackerHit *simhit = dynamic_cast<SimTrackerHit *>(rel->getTo());
-            SimTrackerHitImpl *simhit_new = new SimTrackerHitImpl();
-
-            simhit_new->setCellID0(simhit->getCellID0());
-            simhit_new->setCellID1(simhit->getCellID1());
-            simhit_new->setPosition(simhit->getPosition());
-            simhit_new->setEDep(simhit->getEDep());
-            simhit_new->setTime(simhit->getTime());
-            simhit_new->setMCParticle(simhit->getMCParticle());
-            simhit_new->setMomentum(simhit->getMomentum());
-            simhit_new->setPathLength(simhit->getPathLength());
-            simhit_new->setQuality(simhit->getQuality());
-            simhit_new->setOverlay(simhit->isOverlay());
-            simhit_new->setProducedBySecondary(simhit->isProducedBySecondary());
-
-            outputTrackerSimHitColls[icol]->addElement(simhit_new);
-
-            LCRelationImpl *rel_new = new LCRelationImpl();
-
-            rel_new->setFrom(hit_new);
-            rel_new->setTo(simhit_new);
-            rel_new->setWeight(rel->getWeight());
-
-            outputTrackerHitRels[icol]->addElement(rel_new);
+            // Keep track of clusters saved
+            reco_clusters_to_save[hit] = hit_new;
 
         } // ihit loop
 
-        streamlog_out(MESSAGE) << " " << hits_to_save[icol].size() << " hits added to the collections: "
-                               << m_outputTrackerHitsCollNames[icol] << ", "
-                               << m_outputTrackerSimHitsCollNames[icol] << ", "
+        // Now loop over the LCRelation collection, and save new SimHits as well as their reco-sim relation
+        LCCollection *hitrel_col = inputHitRels[icol];
+        if (hitrel_col)
+        {
+            for (unsigned int irel = 0; irel < hitrel_col->getNumberOfElements(); ++irel)
+            {
+                LCRelation *rel = dynamic_cast<LCRelation *>(hitrel_col->getElementAt(irel));
+                // now check if the pointer to the reco object (From) is in the list of cluster to save
+                TrackerHitPlane *recohit = dynamic_cast<TrackerHitPlane *>(rel->getFrom());
+                auto reco_hit_itr = reco_clusters_to_save.find(recohit);
+                if (reco_hit_itr != reco_clusters_to_save.end())
+                {
+                    // Reconstructed Hit (already saved in output collection)
+                    TrackerHit *hit_new = reco_hit_itr->second;
+
+                    // Simulated Hit
+                    SimTrackerHit *simhit_new=nullptr;
+                    if (outputTrackerSimHitColls[icol] != nullptr) {
+                        SimTrackerHit *simhit = dynamic_cast<SimTrackerHit *>(rel->getTo());
+                        simhit_new = copySimTrackerHit(simhit);
+                        outputTrackerSimHitColls[icol]->addElement(simhit_new);
+                    }
+
+                    // LCRelation
+                    LCRelationImpl *rel_new = new LCRelationImpl();
+                    rel_new->setFrom(hit_new);
+                    rel_new->setTo(simhit_new);
+                    rel_new->setWeight(rel->getWeight());
+                    outputTrackerHitRels[icol]->addElement(rel_new);
+                }
+            } // irel loop
+        } // hitrel available
+
+        streamlog_out(MESSAGE) << " " << reco_clusters_to_save.size() << " hits added to the collections: "
+                               << m_outputTrackerHitsCollNames[icol] << ", ";
+        if (m_outputTrackerHitsConstituentsCollNames[icol] != "")
+            streamlog_out(MESSAGE) << m_outputTrackerHitsConstituentsCollNames[icol] << ", ";
+        streamlog_out(MESSAGE) << m_outputTrackerSimHitsCollNames[icol] << ", "
                                << m_outputTrackerHitRelNames[icol] << std::endl;
 
         evt->addCollection(outputTrackerHitColls[icol], m_outputTrackerHitsCollNames[icol]);
+        if (outputTrackerHitConstituentsColls[icol])
+            evt->addCollection(outputTrackerHitConstituentsColls[icol], m_outputTrackerHitsConstituentsCollNames[icol]);
         evt->addCollection(outputTrackerSimHitColls[icol], m_outputTrackerSimHitsCollNames[icol]);
         evt->addCollection(outputTrackerHitRels[icol], m_outputTrackerHitRelNames[icol]);
 
@@ -326,8 +425,12 @@ void FilterTimeHits::processEvent(LCEvent *evt)
                               << " output collection " << m_outputTrackerSimHitsCollNames[icol] << " of type "
                               << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event \n"
                               << " output collection " << m_outputTrackerHitRelNames[icol] << " of type "
-                              << outputTrackerHitRels[icol]->getTypeName() << " added to the event  "
-                              << std::endl;
+                              << outputTrackerHitRels[icol]->getTypeName() << " added to the event  ";
+        if (outputTrackerHitConstituentsColls[icol]) {
+            streamlog_out(DEBUG5) << " output collection " << m_outputTrackerHitsConstituentsCollNames[icol] << " of type "
+                                  << outputTrackerHitConstituentsColls[icol]->getTypeName() << " added to the event \n";
+        }
+        streamlog_out(DEBUG5) << std::endl;
 
     } // icol loop
 

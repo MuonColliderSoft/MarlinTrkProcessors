@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#include <EVENT/TrackerHitPlane.h>
+#include <EVENT/SimTrackerHit.h>
+
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
@@ -55,10 +58,12 @@ public:
 
 protected:
     // --- Input/output collection names:
-    std::vector<std::string> m_inputTrackerHitsCollNames{};
-    std::vector<std::string> m_inputTrackerSimHitsCollNames{};
-    std::vector<std::string> m_inputTrackerHitRelNames{};
+    std::vector<std::string> m_inputTrackerHitsCollNames{}; /// Reconstructed clusters
+    std::vector<std::string> m_inputTrackerHitsConstituentsCollNames{}; // Individual hits in clusters (if available)
+    std::vector<std::string> m_inputTrackerSimHitsCollNames{}; // Simulated energy deposits (if available)
+    std::vector<std::string> m_inputTrackerHitRelNames{}; // Relations between reconstructed clusters and simulated ones (if available)
     std::vector<std::string> m_outputTrackerHitsCollNames{};
+    std::vector<std::string> m_outputTrackerHitsConstituentsCollNames{};
     std::vector<std::string> m_outputTrackerSimHitsCollNames{};
     std::vector<std::string> m_outputTrackerHitRelNames{};
 
@@ -71,6 +76,12 @@ protected:
     // --- Diagnostic histograms:
     TH1F *m_corrected_time_before = nullptr;
     TH1F *m_corrected_time_after = nullptr;
+
+    // ---- Utility functions
+    // Make a full copy of a TrackerHitPlane object (no copy-constructor defined)
+    TrackerHitPlane* copyTrackerHitPlane(TrackerHitPlane *hit);
+    // Make a fully copy of a SimTrackerHit object
+    SimTrackerHit* copySimTrackerHit(SimTrackerHit *hit);
 
     // --- Run and event counters:
     int _nRun{};
