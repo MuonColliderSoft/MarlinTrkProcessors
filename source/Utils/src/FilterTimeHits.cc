@@ -32,6 +32,11 @@ FilterTimeHits::FilterTimeHits() : Processor("FilterTimeHits")
                                m_inputTrackerHitsCollNames,
                                {});
 
+    registerProcessorParameter("TrackerHitConstituentsInputCollections",
+                               "Name of the tracker hit constituents input collections",
+                               m_inputTrackerHitsConstituentsCollNames,
+                               {});
+
     registerProcessorParameter("TrackerSimHitInputCollections",
                                "Name of the tracker simhit input collections",
                                m_inputTrackerSimHitsCollNames,
@@ -45,6 +50,11 @@ FilterTimeHits::FilterTimeHits() : Processor("FilterTimeHits")
     registerProcessorParameter("TrackerHitOutputCollections",
                                "Name of the tracker hit output collections",
                                m_outputTrackerHitsCollNames,
+                               {});
+
+    registerProcessorParameter("TrackerHitConstituentsOutputCollections",
+                               "Name of the tracker hit output collections",
+                               m_outputTrackerHitsConstituentsCollNames,
                                {});
 
     registerProcessorParameter("TrackerSimHitOutputCollections",
@@ -232,9 +242,13 @@ void FilterTimeHits::processEvent(LCEvent *evt)
         }
 
         // get the reco hits contituents (if available)
+        bool hasHitConstituents = false;
         try
         {
-            if (m_inputTrackerHitsConstituentsCollNames[icol] != "")
+            if (m_inputTrackerHitsConstituentsCollNames.size() > 0)
+                if (m_inputTrackerHitsConstituentsCollNames[icol] != "")
+                    hasHitConstituents = true;
+            if (hasHitConstituents)
                 inputHitConstituentsColls[icol] = evt->getCollection(m_inputTrackerHitsConstituentsCollNames[icol]);
             else
                 inputHitConstituentsColls[icol] = nullptr;
@@ -284,19 +298,25 @@ void FilterTimeHits::processEvent(LCEvent *evt)
         outputTrackerHitColls[icol]->setFlag(lcFlag.getFlag());
 
         // reco hit contituents output collections, if needed
-        if ((m_outputTrackerHitsConstituentsCollNames[icol] != "") &&
-            (inputHitConstituentsColls[icol] != nullptr)) {
-            std::string encoderString = inputHitConstituentsColls[icol]->getParameters().getStringVal("CellIDEncoding");
-            outputTrackerHitConstituentsColls[icol] = new LCCollectionVec(inputHitConstituentsColls[icol]->getTypeName());
-            outputTrackerHitConstituentsColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
-            LCFlagImpl lcFlag(inputHitConstituentsColls[icol]->getFlag());
-            outputTrackerHitConstituentsColls[icol]->setFlag(lcFlag.getFlag());
+        if (hasHitConstituents) {
+            if ((m_outputTrackerHitsConstituentsCollNames[icol] != "") &&
+                (inputHitConstituentsColls[icol] != nullptr))
+            {
+                std::string encoderString = inputHitConstituentsColls[icol]->getParameters().getStringVal("CellIDEncoding");
+                outputTrackerHitConstituentsColls[icol] = new LCCollectionVec(inputHitConstituentsColls[icol]->getTypeName());
+                outputTrackerHitConstituentsColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
+                LCFlagImpl lcFlag(inputHitConstituentsColls[icol]->getFlag());
+                outputTrackerHitConstituentsColls[icol]->setFlag(lcFlag.getFlag());
+            } else {
+                outputTrackerHitConstituentsColls[icol] = nullptr;    
+            }
         } else {
             outputTrackerHitConstituentsColls[icol] = nullptr;
         }
 
         // sim hit output collections
-        if (inputSimHitColls[icol] != nullptr) {
+        if (inputSimHitColls[icol] != nullptr)
+        {
             outputTrackerSimHitColls[icol] = new LCCollectionVec(inputSimHitColls[icol]->getTypeName());
             outputTrackerSimHitColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
             LCFlagImpl lcFlag_sim(inputSimHitColls[icol]->getFlag());
@@ -304,7 +324,8 @@ void FilterTimeHits::processEvent(LCEvent *evt)
         }
 
         // reco-sim relation output collections
-        if (inputHitRels[icol] != nullptr) {
+        if (inputHitRels[icol] != nullptr)
+        {
             outputTrackerHitRels[icol] = new LCCollectionVec(inputHitRels[icol]->getTypeName());
             LCFlagImpl lcFlag_rel(inputHitRels[icol]->getFlag());
             outputTrackerHitRels[icol]->setFlag(lcFlag_rel.getFlag());
@@ -390,8 +411,9 @@ void FilterTimeHits::processEvent(LCEvent *evt)
                     TrackerHit *hit_new = reco_hit_itr->second;
 
                     // Simulated Hit
-                    SimTrackerHit *simhit_new=nullptr;
-                    if (outputTrackerSimHitColls[icol] != nullptr) {
+                    SimTrackerHit *simhit_new = nullptr;
+                    if (outputTrackerSimHitColls[icol] != nullptr)
+                    {
                         SimTrackerHit *simhit = dynamic_cast<SimTrackerHit *>(rel->getTo());
                         simhit_new = copySimTrackerHit(simhit);
                         outputTrackerSimHitColls[icol]->addElement(simhit_new);
@@ -409,8 +431,9 @@ void FilterTimeHits::processEvent(LCEvent *evt)
 
         streamlog_out(MESSAGE) << " " << reco_clusters_to_save.size() << " hits added to the collections: "
                                << m_outputTrackerHitsCollNames[icol] << ", ";
-        if (m_outputTrackerHitsConstituentsCollNames[icol] != "")
-            streamlog_out(MESSAGE) << m_outputTrackerHitsConstituentsCollNames[icol] << ", ";
+        if (m_inputTrackerHitsConstituentsCollNames.size() > 0)
+            if (m_outputTrackerHitsConstituentsCollNames[icol] != "")
+                streamlog_out(MESSAGE) << m_outputTrackerHitsConstituentsCollNames[icol] << ", ";
         streamlog_out(MESSAGE) << m_outputTrackerSimHitsCollNames[icol] << ", "
                                << m_outputTrackerHitRelNames[icol] << std::endl;
 
@@ -426,7 +449,8 @@ void FilterTimeHits::processEvent(LCEvent *evt)
                               << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event \n"
                               << " output collection " << m_outputTrackerHitRelNames[icol] << " of type "
                               << outputTrackerHitRels[icol]->getTypeName() << " added to the event  ";
-        if (outputTrackerHitConstituentsColls[icol]) {
+        if (outputTrackerHitConstituentsColls[icol])
+        {
             streamlog_out(DEBUG5) << " output collection " << m_outputTrackerHitsConstituentsCollNames[icol] << " of type "
                                   << outputTrackerHitConstituentsColls[icol]->getTypeName() << " added to the event \n";
         }
