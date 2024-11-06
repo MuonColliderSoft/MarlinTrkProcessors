@@ -52,7 +52,7 @@ FilterClusters::FilterClusters()
                           _InSimTrackerHitCollection,
                           _InSimTrackerHitCollection);
 
-  registerInputCollection(LCIO::TRACKERHIT,
+  registerInputCollection(LCIO::TRACKERHITPLANE,
                           "InTrackerHitCollection",
                           "Name of the input tracker hit collection",
                           _InTrackerHitCollection,
@@ -70,7 +70,7 @@ FilterClusters::FilterClusters()
                            _OutSimTrackerHitCollection,
                            _OutSimTrackerHitCollection);
 
-  registerOutputCollection(LCIO::TRACKERHIT,
+  registerOutputCollection(LCIO::TRACKERHITPLANE,
                            "OutTrackerHitCollection",
                            "Name of output tracker hit collection",
                            _OutTrackerHitCollection,
@@ -136,7 +136,7 @@ void FilterClusters::processEvent(LCEvent *evt)
 
   // Make the output collections: reco hits, sim hits, reco-sim relationship
   std::string encoderString = InTrackerHitCollection->getParameters().getStringVal("CellIDEncoding");
-  LCCollectionVec *OutTrackerHitCollection = new LCCollectionVec(LCIO::TRACKERHIT);
+  LCCollectionVec *OutTrackerHitCollection = new LCCollectionVec(LCIO::TRACKERHITPLANE);
   OutTrackerHitCollection->parameters().setValue("CellIDEncoding", encoderString);
   LCFlagImpl lcFlag(InTrackerHitCollection->getFlag());
   OutTrackerHitCollection->setFlag(lcFlag.getFlag());
