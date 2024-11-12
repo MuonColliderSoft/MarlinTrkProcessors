@@ -1,6 +1,7 @@
 #pragma once
 
 #include <marlin/Processor.h>
+#include <TH1F.h>
 
 //#include <ACTSTracking/GeometryIdMappingTool.hxx>
 
@@ -39,18 +40,33 @@ private:
    //! Input track collection
    std::string _InTrackerHitCollection {};
    std::string _InRelationCollection {};
+   std::string _InSimTrackerHitCollection {};
 
    //! Output track collection
    std::string _OutTrackerHitCollection {};
    std::string _OutRelationCollection {};
+   std::string _OutSimTrackerHitCollection {};
 
    //! Ranges for theta
-   std::vector<std::string> _ThetaRanges;
+  std::vector<std::string> _ThetaRanges;
 
    //! Cut-offs for cluster size in various theta ranges
-   std::vector<std::string> _ClusterSize;
+  std::vector<std::string> _ClusterSize;
 
-   //! Layers to be filtered
-   std::vector<std::string> _Layers;
+  //! Layers to be filtered
+  std::vector<std::string> _Layers;
+  
+  //!Number of bins in theta
+  std::string _ThetaBins;
+
+  bool m_fillHistos{};
+
+  // --- Diagnostic histograms:
+  TH1F *m_clusterTheta_beforeCut = nullptr;
+  TH1F *m_clusterTheta_afterCut = nullptr;
+  TH1F *m_clusterLayer_beforeCut = nullptr;
+  TH1F *m_clusterLayer_afterCut = nullptr;
+  TH1F *m_clusterSize_beforeCut = nullptr;
+  TH1F *m_clusterSize_afterCut = nullptr;
 
 };
