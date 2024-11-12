@@ -222,23 +222,23 @@ void FilterClusters::processEvent(LCEvent *evt)
     streamlog_out(DEBUG3) << "Decoded system/layer:" << systemID << "/" << layerID << std::endl;
 
     int rows = _Layers.size(), cols = std::stoi(_ThetaBins);
-    if ((rows * cols != _ThetaRanges.size()) || (rows * (cols - 1) != _ClusterSize.size()))
+    if ((rows * (cols + 1) != _ThetaRanges.size()) || (rows * cols != _ClusterSize.size()))
     {
       std::cout << "Either theta cuts or cluster cuts not provided for each layer. Please change the config, exiting now..." << std::endl;
       return;
     }
 
-    std::vector<std::vector<float>> _thetaCuts_byLayer;
+    std::vector<std::vector<float>> _thetaBins_byLayer;
     std::vector<std::vector<float>> _clusterSizeCuts_byLayer;
 
     for (int k = 0; k < rows; ++k)
     {
       std::vector<float> row;
-      for (int j = 0; j < cols; ++j)
+      for (int j = 0; j <= cols; ++j)
       {
-        row.push_back(std::stof(_ThetaRanges[j]));
+        row.push_back(std::stof(_ThetaRanges[j + k*(cols+1)]));
       }
-      _thetaCuts_byLayer.push_back(row);
+      _thetaBins_byLayer.push_back(row);
     }
 
     for (int k = 0; k < rows; ++k)
@@ -246,16 +246,18 @@ void FilterClusters::processEvent(LCEvent *evt)
       std::vector<float> row;
       for (int j = 0; j < cols; ++j)
       {
-        row.push_back(std::stof(_ClusterSize[j]));
+        row.push_back(std::stof(_ClusterSize[j + k*cols]));
       }
       _clusterSizeCuts_byLayer.push_back(row);
     }
 
+    int layerInd = -1;
     for (size_t j = 0; j < _Layers.size(); ++j)
     {
       if (layerID == std::stof(_Layers[j]))
       {
         filter_layer = true;
+	layerInd = j;
         break;
       }
     }
@@ -272,22 +274,23 @@ void FilterClusters::processEvent(LCEvent *evt)
     if (filter_layer)
     {
       store_hit = false;
-      for (size_t j = 0; j < _thetaCuts_byLayer[layerID].size() - 1; ++j)
+      for (size_t j = 0; j < _thetaBins_byLayer[layerInd].size() - 1; ++j)
       {
         streamlog_out(DEBUG0) << "theta: " << incidentTheta << std::endl;
-        float min_theta = _thetaCuts_byLayer[layerID][j];
-        float max_theta = _thetaCuts_byLayer[layerID][j + 1];
+        float min_theta = _thetaBins_byLayer[layerInd][j];
+        float max_theta = _thetaBins_byLayer[layerInd][j + 1];
         streamlog_out(DEBUG0) << "theta range: " << min_theta << ", " << max_theta << std::endl;
 
         if (incidentTheta >= min_theta and incidentTheta <= max_theta and filter_layer)
         {
-          store_hit = true;
           streamlog_out(DEBUG0) << "theta in range" << std::endl;
-          streamlog_out(DEBUG0) << "cluster size cut off: " << _clusterSizeCuts_byLayer[layerID][j] << std::endl;
+          streamlog_out(DEBUG0) << "cluster size cut off: " << _clusterSizeCuts_byLayer[layerInd][j] << std::endl;
           streamlog_out(DEBUG0) << "cluster size: " << cluster_size << std::endl;
-          if (cluster_size < _clusterSizeCuts_byLayer[layerID][j])
+          if (cluster_size < _clusterSizeCuts_byLayer[layerInd][j])
           {
+	    store_hit = true;
             streamlog_out(DEBUG0) << "Adding reco/sim clusters and relation to output collections" << std::endl;
+	    break;
           }
         }
       }
