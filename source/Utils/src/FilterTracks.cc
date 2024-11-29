@@ -7,6 +7,7 @@
 #include <EVENT/Track.h>
 #include <EVENT/TrackerHit.h>
 #include <IMPL/LCCollectionVec.h>
+#include <IMPL/LCFlagImpl.h>
 #include <UTIL/CellIDDecoder.h>
 #include <UTIL/LCTrackerConf.h>
 
@@ -66,6 +67,18 @@ FilterTracks::FilterTracks()
            _MaxPt
             );
 
+  registerProcessorParameter("MinTheta",
+             "Minimum theta",
+           _MinTheta,
+           _MinTheta
+            );
+
+  registerProcessorParameter("MaxTheta",
+             "Max theta",
+           _MaxTheta,
+           _MaxTheta
+            );
+
   registerProcessorParameter("Chi2Spatial",
 		  	     "iMinimum value for Spatial chi squared",
 			     _Chi2Spatial,
@@ -83,6 +96,12 @@ FilterTracks::FilterTracks()
            _MaxHoles,
            _MaxHoles
             );
+
+  registerProcessorParameter("MaxOutliers",
+             "Max number of outliers",
+           _MaxOutl,
+           _MaxOutl
+          );
 
   registerProcessorParameter("Bz",
              "Magnetic field in Tesla (default: 5)",
@@ -135,7 +154,7 @@ void FilterTracks::init()
 {
   // Print the initial parameters
   printParameters() ;
-  // it require that geometry is initialized
+  // it requires that geometry has been already initialized
   // buildBfield() ;
 }
 
@@ -166,8 +185,8 @@ void FilterTracks::processEvent( LCEvent * evt )
   TMVA::Reader* reader = new TMVA::Reader();
 
   // Get input collection
-  LCCollection* InputTrackCollection  =evt->getCollection(_InputTrackCollection);
-
+  LCCollection* InputTrackCollection = evt->getCollection(_InputTrackCollection);
+  
   if( InputTrackCollection->getTypeName() != lcio::LCIO::TRACK )
     { throw EVENT::Exception( "Invalid collection type: " + InputTrackCollection->getTypeName() ) ; }
 
@@ -208,7 +227,7 @@ void FilterTracks::processEvent( LCEvent * evt )
 
     vars["trthn"] = trk->getNholes();
     float pt = fabs(0.3*_Bz/trk->getOmega()/1000);
-
+    float theta = M_PI_2-atan(trk->getTanLambda());
     vars["trch2"] = trk->getChi2();
 
     vars["trndf"] = trk->getNdf();
@@ -236,8 +255,11 @@ void FilterTracks::processEvent( LCEvent * evt )
 	          vars["trtohn"] > _NHitsOuter  &&
 	          pt             > _MinPt       &&
             pt             < _MaxPt       &&
+            theta          > _MinTheta    &&
+            theta          < _MaxTheta    &&
 	          vars["trch2"]  > _Chi2Spatial &&
             vars["trndf"]  > _MinNdf      &&
+            vars["trtnh"]-vars["trndf"]/2 < _MaxOutl &&
             vars["trthn"]  < _MaxHoles)
 	         { OutputTrackCollection->addElement(trk); }
       }

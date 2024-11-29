@@ -16,7 +16,13 @@ namespace TrackPerf
  *  @parameter NHitsVertex Minimum number of hits on vertex detector
  *  @parameter NHitsInner Minimum number of hits on inner tracker
  *  @parameter NHitsOuter Minimum number of hits on outer tracker
+ *  @parameter MaxOutliers Maximum number of outliers hits on track
+ *  @parameter MaxHoles Maximum number of holes on track
+ *  @parameter MinNdf Minimum value for ndf
  *  @parameter MinPt Minimum transverse momentum
+ *  @parameter MaxPt Max transverse momentum
+ *  @parameter MinTheta Minimum theta
+ *  @parameter MaxTheta Max theta
  *  @parameter Chi2Spatial Spatial chi squared
  *
  * @author N. Bruhwiler
@@ -77,8 +83,15 @@ private:
    float _MinPt = 0.5;    //units GeV
    float _MaxPt = 1000.0; //units GeV
 
+   //! Cut off for theta (rad)
+   float _MinTheta = 0;    
+   float _MaxTheta = 3.14; 
+
    //! Cut off for the value ndf
-   int _MinNdf = 1;  
+   int _MinNdf = 1;
+
+   //! Cut off for outliers number   
+   int _MaxOutl = 0;  
 
    //! Cut off for spatial and temporal chi squared values
    float _Chi2Spatial = 0;
