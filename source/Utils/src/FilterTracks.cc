@@ -8,6 +8,7 @@
 #include <EVENT/TrackerHit.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCFlagImpl.h>
+#include <IMPL/TrackImpl.h>
 #include <UTIL/CellIDDecoder.h>
 #include <UTIL/LCTrackerConf.h>
 
@@ -180,7 +181,13 @@ void FilterTracks::processEvent( LCEvent * evt )
 {
   // Make the output track collection
   LCCollectionVec *OutputTrackCollection = new LCCollectionVec(LCIO::TRACK);
-  OutputTrackCollection->setSubset(true);
+  // do not store pointers but real tracks
+  OutputTrackCollection->setSubset(false);
+
+  // if we want to point back to the hits we need to set the flag
+  LCFlagImpl trkFlag(0);
+  trkFlag.setBit(LCIO::TRBIT_HITS);
+  OutputTrackCollection->setFlag(trkFlag.getFlag());
 
   TMVA::Reader* reader = new TMVA::Reader();
 
@@ -242,12 +249,17 @@ void FilterTracks::processEvent( LCEvent * evt )
 	        break;
 	      }
       }
-      if(endcaphits == false) { OutputTrackCollection->addElement(trk); }
+      if (endcaphits == false) { 
+        auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
+        OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
+      }
     } else { // track property cuts
       if ( not _NNmethod.empty() ) { // NN cuts
         auto prediction = reader->EvaluateMVA(_NNmethod);
-        if ( prediction > _NNthr )
-          OutputTrackCollection->addElement(trk); 
+        if ( prediction > _NNthr ) {
+          auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
+          OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
+        }
       } else { // user cuts
         if (vars["trtnh"]  > _NHitsTotal  &&
 	          vars["trtvhn"] > _NHitsVertex &&
@@ -261,7 +273,10 @@ void FilterTracks::processEvent( LCEvent * evt )
             vars["trndf"]  > _MinNdf      &&
             vars["trtnh"]-vars["trndf"]/2 < _MaxOutl &&
             vars["trthn"]  < _MaxHoles)
-	         { OutputTrackCollection->addElement(trk); }
+	          { 
+              auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
+              OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
+            }
       }
     }
   }

@@ -77,7 +77,7 @@ private:
    //! Cut off for number of hits in outer tracker (barrel and endcap combined)
    int _NHitsOuter = 1;
    //! Cut off for number of holes
-   int _MaxHoles = 1;
+   int _MaxHoles = 10;
 
    //! Cut off for momentum (GeV)
    float _MinPt = 0.5;    //units GeV
@@ -91,7 +91,7 @@ private:
    int _MinNdf = 1;
 
    //! Cut off for outliers number   
-   int _MaxOutl = 0;  
+   int _MaxOutl = 10;  
 
    //! Cut off for spatial and temporal chi squared values
    float _Chi2Spatial = 0;
