@@ -104,6 +104,12 @@ FilterTracks::FilterTracks()
            _MaxOutl
           );
 
+  registerProcessorParameter("MaxOutliersOverHits",
+            "Max ratio of outliers/hits",
+            _MaxOutlOverHits,
+            _MaxOutlOverHits
+         );
+
   registerProcessorParameter("Bz",
              "Magnetic field in Tesla (default: 5)",
            _Bz,
@@ -272,6 +278,7 @@ void FilterTracks::processEvent( LCEvent * evt )
 	          vars["trch2"]  > _Chi2Spatial &&
             vars["trndf"]  > _MinNdf      &&
             vars["trtnh"]-vars["trndf"]/2 < _MaxOutl &&
+            (vars["trtnh"]-vars["trndf"]/2) / vars["trtnh"] < _MaxOutlOverHits &&
             vars["trthn"]  < _MaxHoles)
 	          { 
               auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);

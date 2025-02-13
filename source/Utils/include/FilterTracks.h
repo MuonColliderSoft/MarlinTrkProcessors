@@ -93,6 +93,9 @@ private:
    //! Cut off for outliers number   
    int _MaxOutl = 10;  
 
+   //! Cut off for ratio outliers/tot hits
+   float _MaxOutlOverHits = 1.;  
+
    //! Cut off for spatial and temporal chi squared values
    float _Chi2Spatial = 0;
 
