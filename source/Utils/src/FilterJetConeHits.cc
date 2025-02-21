@@ -86,8 +86,17 @@ FilterJetConeHits::FilterJetConeHits() : Processor("FilterJetConeHits") {
   registerProcessorParameter( "MinDaughterMaxPt",
 			      "Min pT of the highest-pT track in jet to use it as filter",
 			      m_minDaughterMaxPt,
-			      double(2.) );  
+			      double(2.) );   
 
+  registerProcessorParameter( "FilteredJetsCollectionName",
+            "Name of the (optional) output filtered jets collection",
+            m_filteredJetCaloCollName,
+            std::string("FilteredJets") ); 
+
+  registerProcessorParameter( "MakeFilteredJetsCollection",
+            "Flag for producing collection of filtered jets",
+            m_createFilteredJets,
+            bool(false) );
     
 }
 
@@ -255,14 +264,21 @@ void FilterJetConeHits::processEvent( LCEvent * evt ) {
   // --- Loop over the JetCalo:
   
   std::vector<std::set<int> > hits_to_save(nTrackerHitCol);
+
+  LCCollectionVec* filterJetsColl = new LCCollectionVec( LCIO::RECONSTRUCTEDPARTICLE );
+  LCFlagImpl flagJets( m_inputJetCalo->getFlag() );
+  filterJetsColl->setFlag( flagJets.getFlag() );
+
+  unsigned int nGoodJets = 0;
   
   for (int ipart=0; ipart<m_inputJetCalo->getNumberOfElements(); ++ipart){
 
     ReconstructedParticle* part = dynamic_cast<ReconstructedParticle*>( m_inputJetCalo->getElementAt(ipart) );
 
     if( !FilterJetConeHits::filterJetBib(part) ) continue; //quality selection to reject fake jets
+    nGoodJets++;
 
-   // double part_p = sqrt( part->getMomentum()[0]*part->getMomentum()[0] +part->getMomentum()[1]*part->getMomentum()[1] + part->getMomentum()[2]*part->getMomentum()[2] );
+    if( m_createFilteredJets ) saveJet( part , filterJetsColl); //save filtered jet
 
     // --- Loop over the tracker hits and select hits inside a cone around the jet axis:
 
@@ -273,38 +289,38 @@ void FilterJetConeHits::processEvent( LCEvent * evt ) {
       
       for (int ihit=0; ihit<hit_col->getNumberOfElements(); ++ihit){
 
-	TrackerHitPlane* hit = dynamic_cast<TrackerHitPlane*>(hit_col->getElementAt(ihit));
+	      TrackerHitPlane* hit = dynamic_cast<TrackerHitPlane*>(hit_col->getElementAt(ihit));
 
-	// --- Skip hits that are in the opposite hemisphere w.r.t. the jet axis:
-	if ( ( hit->getPosition()[0]*part->getMomentum()[0] +
-	       hit->getPosition()[1]*part->getMomentum()[1] +
-	       hit->getPosition()[2]*part->getMomentum()[2] ) < 0. ) continue;
+	      // --- Skip hits that are in the opposite hemisphere w.r.t. the jet axis:
+        if ( ( hit->getPosition()[0]*part->getMomentum()[0] +
+              hit->getPosition()[1]*part->getMomentum()[1] +
+              hit->getPosition()[2]*part->getMomentum()[2] ) < 0. ) continue;
 
 
-	// --- Get the distance between the hit and the jet axis
-	
-	double jet_p = sqrt( pow(part->getMomentum()[0],2) + pow(part->getMomentum()[1],2) + pow(part->getMomentum()[2],2)  );
-	double jet_theta = acos(part->getMomentum()[2]/jet_p);
-	double jet_eta = -std::log(tan(jet_theta/2.));
-	
-	double hit_d = sqrt( pow(hit->getPosition()[0],2) + pow(hit->getPosition()[1],2) + pow(hit->getPosition()[2],2)  );
-	double hit_theta = acos(hit->getPosition()[2]/hit_d);
+        // --- Get the distance between the hit and the jet axis
+        
+        double jet_p = sqrt( pow(part->getMomentum()[0],2) + pow(part->getMomentum()[1],2) + pow(part->getMomentum()[2],2)  );
+        double jet_theta = acos(part->getMomentum()[2]/jet_p);
+        double jet_eta = -std::log(tan(jet_theta/2.));
+        
+        double hit_d = sqrt( pow(hit->getPosition()[0],2) + pow(hit->getPosition()[1],2) + pow(hit->getPosition()[2],2)  );
+        double hit_theta = acos(hit->getPosition()[2]/hit_d);
         double hit_eta = -std::log(tan(hit_theta/2.));
 
-	double jet_pxy = sqrt( pow(part->getMomentum()[0],2) + pow(part->getMomentum()[1],2) );
-	double hit_dxy = sqrt( pow(hit->getPosition()[0],2) + pow(hit->getPosition()[1],2) );
-	double deltaPhi = acos( (part->getMomentum()[0]*hit->getPosition()[0] + part->getMomentum()[1]*hit->getPosition()[1] )/jet_pxy/hit_dxy);
+        double jet_pxy = sqrt( pow(part->getMomentum()[0],2) + pow(part->getMomentum()[1],2) );
+        double hit_dxy = sqrt( pow(hit->getPosition()[0],2) + pow(hit->getPosition()[1],2) );
+        double deltaPhi = acos( (part->getMomentum()[0]*hit->getPosition()[0] + part->getMomentum()[1]*hit->getPosition()[1] )/jet_pxy/hit_dxy);
 
-	double deltaR = sqrt( pow(deltaPhi,2) + pow(jet_eta-hit_eta,2)  );
+        double deltaR = sqrt( pow(deltaPhi,2) + pow(jet_eta-hit_eta,2)  );
 
-	if ( m_fillHistos ){
+        if ( m_fillHistos ){
 
-	  m_dist->Fill(deltaR);
+          m_dist->Fill(deltaR);
 
-	}
+        }
 	
-	if ( deltaR < m_deltaRCut )
-	  hits_to_save[icol].insert(ihit);
+        if ( deltaR < m_deltaRCut )
+          hits_to_save[icol].insert(ihit);
 	
       } // ihit loop
        
@@ -389,6 +405,14 @@ void FilterJetConeHits::processEvent( LCEvent * evt ) {
 
   } // icol loop
 
+  if( m_createFilteredJets ){
+    evt->addCollection(filterJetsColl, m_filteredJetCaloCollName);
+    streamlog_out(MESSAGE) << "Saved Filtered Jets collection, with " << filterJetsColl->getNumberOfElements() << " jets." << std::endl;
+  }
+  else{
+    delete filterJetsColl;
+  }
+
   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
 		       << "   in run:  " << evt->getRunNumber() << std::endl ;
   
@@ -432,3 +456,36 @@ bool FilterJetConeHits::filterJetBib(ReconstructedParticle* jet){
   streamlog_out(DEBUG) << "Accepted jet with ntracks = " << ntracks << " and max daughter pT = " << maxPt << std::endl;
   return true;
 }
+
+// save jet in collection
+void FilterJetConeHits::saveJet( ReconstructedParticle* jet, LCCollectionVec* jetsColl ){
+
+  // this way only a pointer to the original jet is saved
+  // if necessary implement here the phys copy save
+  //jetsColl->addElement(jet);
+  ReconstructedParticleImpl* j = new ReconstructedParticleImpl();
+  j->setType( jet->getType() );
+  j->setMomentum( jet->getMomentum() );
+  j->setEnergy( jet->getEnergy() );
+  j->setMass( jet->getMass() );
+  j->setCharge( jet->getCharge() );
+  j->setReferencePoint( jet->getReferencePoint() );
+
+  const EVENT::ReconstructedParticleVec rpvec = jet->getParticles();
+  for(unsigned int i = 0; i < rpvec.size(); i++) j->addParticle(rpvec[i]);
+
+  const EVENT::ClusterVec clvec = jet->getClusters();
+  for(unsigned int i = 0; i < clvec.size(); i++) j->addCluster(clvec[i]);
+
+  const EVENT::TrackVec trvec = jet->getTracks();
+  for(unsigned int i = 0; i < trvec.size(); i++) j->addTrack(trvec[i]);
+
+  jetsColl->addElement(j);
+
+  streamlog_out( MESSAGE ) << "Saving Jet: p = ( " << j->getMomentum()[0] << " , "
+                                                    << j->getMomentum()[1] << " , "
+                                                    << j->getMomentum()[2] << " ) " << std::endl;
+
+  return;
+}
+  
