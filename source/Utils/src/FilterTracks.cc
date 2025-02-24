@@ -110,6 +110,36 @@ FilterTracks::FilterTracks()
             _MaxOutlOverHits
          );
 
+  registerProcessorParameter("MaxSigmaD0",
+          "Max sigma d0",
+          _MaxSigD0,
+          _MaxSigD0
+       );
+
+  registerProcessorParameter("MaxSigmaZ0",
+          "Max sigma z0",
+          _MaxSigZ0,
+          _MaxSigZ0
+      );
+
+  registerProcessorParameter("MaxSigmaTheta",
+          "Max sigma theta",
+          _MaxSigTheta,
+          _MaxSigTheta
+        );
+
+  registerProcessorParameter("MaxSigmaPhi",
+          "Max sigma phi",
+          _MaxSigPhi,
+          _MaxSigPhi
+        );
+
+  registerProcessorParameter("MaxSigmaQoverP",
+          "Max sigma q/p",
+          _MaxSigQoverP,
+          _MaxSigQoverP
+        );
+
   registerProcessorParameter("Bz",
              "Magnetic field in Tesla (default: 5)",
            _Bz,
@@ -215,6 +245,11 @@ void FilterTracks::processEvent( LCEvent * evt )
     {"trtnh", 0},
     {"trch2", 0},
     {"trndf", 0},
+    {"tr_sigd0",0},
+    {"tr_sigz0",0},
+    {"tr_sigtheta",0},
+    {"tr_sigphi",0},
+    {"tr_sigqoverp",0}
   };
 
   if ( not _NNmethod.empty() ) {
@@ -244,6 +279,12 @@ void FilterTracks::processEvent( LCEvent * evt )
     vars["trch2"] = trk->getChi2();
 
     vars["trndf"] = trk->getNdf();
+
+    vars["tr_sigd0"] = sqrt(trk->getCovMatrix()[0]);
+    vars["tr_sigz0"] = sqrt(trk->getCovMatrix()[2]);
+    vars["tr_sigtheta"] = sqrt(trk->getCovMatrix()[9]);
+    vars["tr_sigphi"] = sqrt(trk->getCovMatrix()[5]);
+    vars["tr_sigqoverp"] = sqrt(trk->getCovMatrix()[14]);
 
     if(_BarrelOnly == true) {
       bool endcaphits = false;
@@ -279,7 +320,12 @@ void FilterTracks::processEvent( LCEvent * evt )
             vars["trndf"]  > _MinNdf      &&
             vars["trtnh"]-vars["trndf"]/2 < _MaxOutl &&
             (vars["trtnh"]-vars["trndf"]/2) / vars["trtnh"] < _MaxOutlOverHits &&
-            vars["trthn"]  < _MaxHoles)
+            vars["trthn"]  < _MaxHoles    &&
+            vars["tr_sigd0"] < _MaxSigD0  &&
+            vars["tr_sigz0"] < _MaxSigZ0  &&
+            vars["tr_sigtheta"] < _MaxSigTheta  &&
+            vars["tr_sigphi"] < _MaxSigPhi  &&
+            vars["tr_sigqoverp"] < _MaxSigQoverP)
 	          { 
               auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
               OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
