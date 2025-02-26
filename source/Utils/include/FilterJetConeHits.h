@@ -58,6 +58,7 @@ class FilterJetConeHits : public Processor {
 
   void saveJet( ReconstructedParticle* jet, LCCollectionVec* jetsColl );
   
+  void directionCorrection( const double* p, double* pcorr ) ;
   
  protected:
 
@@ -80,6 +81,13 @@ class FilterJetConeHits : public Processor {
   double m_minDaughterMaxPt{} ;
   int m_minNTracks{} ;
   bool m_createFilteredJets{} ;
+
+  // Jet direction correction params
+  bool m_makeDirCorrection{} ;
+  double m_corrConst{};
+  double m_corrLin{};
+  double m_corrQuad{};
+  double m_corrCub{};
 
   // --- Diagnostic histograms:
   TH1F* m_dist = nullptr ;

@@ -97,7 +97,31 @@ FilterJetConeHits::FilterJetConeHits() : Processor("FilterJetConeHits") {
             "Flag for producing collection of filtered jets",
             m_createFilteredJets,
             bool(false) );
-    
+
+  registerProcessorParameter( "MakeDirectionCorrection",
+            "Flag for correcting direction of filtered jets",
+            m_makeDirCorrection,
+             bool(false) );
+ 
+  registerProcessorParameter( "CorrectionConstant",
+            "Direction correction constant term",
+            m_corrConst,
+            double(0.) );
+
+  registerProcessorParameter( "CorrectionLinear",
+            "Direction correction linear term",
+            m_corrLin,
+            double(1.) );
+
+  registerProcessorParameter( "CorrectionQuadratic",
+            "Direction correction quadratic term",
+            m_corrQuad,
+            double(0.) );
+
+  registerProcessorParameter( "CorrectionCubic",
+            "Direction correction cubic term",
+            m_corrCub,
+            double(0.) );
 }
 
 
@@ -280,6 +304,14 @@ void FilterJetConeHits::processEvent( LCEvent * evt ) {
 
     if( m_createFilteredJets ) saveJet( part , filterJetsColl); //save filtered jet
 
+    double mom[3];
+    if( !m_makeDirCorrection ){
+      for(int n = 0; n < 3; n++) mom[n] = part->getMomentum()[n]; //> to avoid const cast
+    }
+    else{
+      directionCorrection( part->getMomentum(), mom );
+    }
+
     // --- Loop over the tracker hits and select hits inside a cone around the jet axis:
 
     for (unsigned int icol=0; icol<inputHitColls.size(); ++icol){
@@ -292,24 +324,24 @@ void FilterJetConeHits::processEvent( LCEvent * evt ) {
 	      TrackerHitPlane* hit = dynamic_cast<TrackerHitPlane*>(hit_col->getElementAt(ihit));
 
 	      // --- Skip hits that are in the opposite hemisphere w.r.t. the jet axis:
-        if ( ( hit->getPosition()[0]*part->getMomentum()[0] +
-              hit->getPosition()[1]*part->getMomentum()[1] +
-              hit->getPosition()[2]*part->getMomentum()[2] ) < 0. ) continue;
+        if ( ( hit->getPosition()[0]*mom[0] +
+              hit->getPosition()[1]*mom[1] +
+              hit->getPosition()[2]*mom[2] ) < 0. ) continue;
 
 
         // --- Get the distance between the hit and the jet axis
         
-        double jet_p = sqrt( pow(part->getMomentum()[0],2) + pow(part->getMomentum()[1],2) + pow(part->getMomentum()[2],2)  );
-        double jet_theta = acos(part->getMomentum()[2]/jet_p);
+        double jet_p = sqrt( pow(mom[0],2) + pow(mom[1],2) + pow(mom[2],2)  );
+        double jet_theta = acos(mom[2]/jet_p);
         double jet_eta = -std::log(tan(jet_theta/2.));
         
         double hit_d = sqrt( pow(hit->getPosition()[0],2) + pow(hit->getPosition()[1],2) + pow(hit->getPosition()[2],2)  );
         double hit_theta = acos(hit->getPosition()[2]/hit_d);
         double hit_eta = -std::log(tan(hit_theta/2.));
 
-        double jet_pxy = sqrt( pow(part->getMomentum()[0],2) + pow(part->getMomentum()[1],2) );
+        double jet_pxy = sqrt( pow(mom[0],2) + pow(mom[1],2) );
         double hit_dxy = sqrt( pow(hit->getPosition()[0],2) + pow(hit->getPosition()[1],2) );
-        double deltaPhi = acos( (part->getMomentum()[0]*hit->getPosition()[0] + part->getMomentum()[1]*hit->getPosition()[1] )/jet_pxy/hit_dxy);
+        double deltaPhi = acos( (mom[0]*hit->getPosition()[0] + mom[1]*hit->getPosition()[1] )/jet_pxy/hit_dxy);
 
         double deltaR = sqrt( pow(deltaPhi,2) + pow(jet_eta-hit_eta,2)  );
 
@@ -465,7 +497,14 @@ void FilterJetConeHits::saveJet( ReconstructedParticle* jet, LCCollectionVec* je
   //jetsColl->addElement(jet);
   ReconstructedParticleImpl* j = new ReconstructedParticleImpl();
   j->setType( jet->getType() );
-  j->setMomentum( jet->getMomentum() );
+
+  double pcorr[3];
+  if( !m_makeDirCorrection ) j->setMomentum( jet->getMomentum() );
+  else{
+    directionCorrection(jet->getMomentum(), pcorr);
+    j->setMomentum( pcorr );
+  }
+
   j->setEnergy( jet->getEnergy() );
   j->setMass( jet->getMass() );
   j->setCharge( jet->getCharge() );
@@ -485,6 +524,37 @@ void FilterJetConeHits::saveJet( ReconstructedParticle* jet, LCCollectionVec* je
   streamlog_out( MESSAGE ) << "Saving Jet: p = ( " << j->getMomentum()[0] << " , "
                                                     << j->getMomentum()[1] << " , "
                                                     << j->getMomentum()[2] << " ) " << std::endl;
+
+  if( m_makeDirCorrection ){
+    const double* pold = jet->getMomentum();
+    double oldtheta = acos( pold[2] / sqrt(pold[0]*pold[0] + pold[1]*pold[1] + pold[2]*pold[2]) ) * 180. / 3.14159265;
+    const double* pnew = j->getMomentum();
+    double newtheta = acos( pnew[2] / sqrt(pnew[0]*pnew[0] + pnew[1]*pnew[1] + pnew[2]*pnew[2]) ) * 180. / 3.14159265;
+    streamlog_out( MESSAGE ) << "Corrected: old THETA = " << oldtheta << " => new THETA = " << newtheta << std::endl;
+  }
+
+  return;
+}
+
+void FilterJetConeHits::directionCorrection( const double* p, double* pcorr ){
+
+  double ptot = sqrt( p[0]*p[0] + p[1]*p[1] + p[2]*p[2] );
+  double theta = acos( p[2] / ptot ) * 180. / 3.14159265;
+  double theta_pre = theta;
+
+  //> only in transition region, hardcoded for now...
+  if(theta > 30. && theta < 60.){
+    theta = m_corrConst + m_corrLin * theta + m_corrQuad * pow(theta, 2.) + m_corrCub * pow(theta, 3.);
+  }
+  else if(theta > 120. && theta < 150.){
+    theta = 180. - theta;
+    theta = m_corrConst + m_corrLin * theta + m_corrQuad * pow(theta, 2.) + m_corrCub * pow(theta, 3.);
+    theta = 180. - theta;
+  }
+
+  pcorr[0] = p[0] * sin( theta * 3.14159265 / 180. ) / sin( theta_pre * 3.14159265 / 180. );
+  pcorr[1] = p[1] * sin( theta * 3.14159265 / 180. ) / sin( theta_pre * 3.14159265 / 180. );
+  pcorr[2] = p[2] * cos( theta * 3.14159265 / 180. ) / cos( theta_pre * 3.14159265 / 180. );
 
   return;
 }
