@@ -9,6 +9,8 @@
 #include <IMPL/LCRelationImpl.h>
 #include <IMPL/LCFlagImpl.h>
 
+#include <UTIL/LCRelationNavigator.h>
+
 #include "DD4hep/Detector.h"
 #include "DD4hep/DD4hepUnits.h"
 
@@ -143,10 +145,10 @@ void FilterTimeHits::processEvent(LCEvent *evt)
     std::vector<LCCollection *> inputSimHitColls(nTrackerHitCol);
     std::vector<LCCollection *> inputHitRels(nTrackerHitCol);
 
-    std::vector<LCCollectionVec *> outputTrackerHitColls(nTrackerHitCol);
-    std::vector<LCCollectionVec *> outputTrackerSimHitColls(nTrackerHitCol);
-    std::vector<LCCollectionVec *> outputTrackerHitRels(nTrackerHitCol);
-
+    LCCollectionVec *outputTrackerHitCol = 0;
+    LCCollectionVec *outputTrackerSimHitCol = 0;
+    LCCollection *outputTrackerHitRel = 0;
+ 
     for (unsigned int icol = 0; icol < nTrackerHitCol; ++icol)
     {
 
@@ -186,27 +188,10 @@ void FilterTimeHits::processEvent(LCEvent *evt)
             continue;
         }
 
-        // reco hit output collections
-        std::string encoderString = inputHitColls[icol]->getParameters().getStringVal("CellIDEncoding");
-        outputTrackerHitColls[icol] = new LCCollectionVec(inputHitColls[icol]->getTypeName());
-        outputTrackerHitColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
-        LCFlagImpl lcFlag(inputHitColls[icol]->getFlag());
-        outputTrackerHitColls[icol]->setFlag(lcFlag.getFlag());
-
-        // sim hit output collections
-        outputTrackerSimHitColls[icol] = new LCCollectionVec(inputSimHitColls[icol]->getTypeName());
-        outputTrackerSimHitColls[icol]->parameters().setValue("CellIDEncoding", encoderString);
-        LCFlagImpl lcFlag_sim(inputSimHitColls[icol]->getFlag());
-        outputTrackerSimHitColls[icol]->setFlag(lcFlag_sim.getFlag());
-
-        // reco-sim relation output collections
-        outputTrackerHitRels[icol] = new LCCollectionVec(inputHitRels[icol]->getTypeName());
-        LCFlagImpl lcFlag_rel(inputHitRels[icol]->getFlag());
-        outputTrackerHitRels[icol]->setFlag(lcFlag_rel.getFlag());
     }
 
     // --- Loop over the tracker hits and select hits inside the chosen time window:
-    std::vector<std::set<int>> hits_to_save(nTrackerHitCol);
+    //std::vector<std::set<int>> hits_to_save(nTrackerHitCol);
 
     for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol)
     {
@@ -214,6 +199,20 @@ void FilterTimeHits::processEvent(LCEvent *evt)
         LCCollection *hit_col = inputHitColls[icol];
         if (!hit_col)
             continue;
+
+        // reco hit output collections
+        std::string encoderString = inputHitColls[icol]->getParameters().getStringVal("CellIDEncoding");
+        outputTrackerHitCol = new LCCollectionVec(inputHitColls[icol]->getTypeName());
+        outputTrackerHitCol->setSubset(true);
+        outputTrackerHitCol->parameters().setValue("CellIDEncoding", encoderString);
+
+        // sim hit output collections
+        outputTrackerSimHitCol = new LCCollectionVec(inputSimHitColls[icol]->getTypeName());
+        outputTrackerSimHitCol->parameters().setValue("CellIDEncoding", encoderString);
+        outputTrackerSimHitCol->setSubset(true);
+
+        // reco-sim relation output collections
+        UTIL::LCRelationNavigator thitNav = UTIL::LCRelationNavigator( LCIO::TRACKERHITPLANE, LCIO::SIMTRACKERHIT );
 
         for (int ihit = 0; ihit < hit_col->getNumberOfElements(); ++ihit)
         {
@@ -237,86 +236,37 @@ void FilterTimeHits::processEvent(LCEvent *evt)
                     continue;
                 }
 
-                hits_to_save[icol].insert(ihit);
+                //hits_to_save[icol].insert(ihit);
+                outputTrackerHitCol->addElement(hit);
+
+                LCRelation *rel = static_cast<LCRelation *>(inputHitRels[icol]->getElementAt(ihit));
+                SimTrackerHit *simhit = static_cast<SimTrackerHit *>(rel->getTo());
+                outputTrackerSimHitCol->addElement(simhit);
+
+                thitNav.addRelation(hit, simhit);
 
                 if (m_fillHistos)
                     m_corrected_time->Fill(hitT);
             }
 
         } // ihit loop
-
-    } // icol loop
-
-    // --- Add the filtered hits to the output collections:
-
-    for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol)
-    {
-
-        for (auto &ihit : hits_to_save[icol])
-        {
-
-            TrackerHitPlane *hit = dynamic_cast<TrackerHitPlane *>(inputHitColls[icol]->getElementAt(ihit));
-            TrackerHitPlaneImpl *hit_new = new TrackerHitPlaneImpl();
-
-            hit_new->setCellID0(hit->getCellID0());
-            hit_new->setCellID1(hit->getCellID1());
-            hit_new->setType(hit->getType());
-            hit_new->setPosition(hit->getPosition());
-            hit_new->setU(hit->getU());
-            hit_new->setV(hit->getV());
-            hit_new->setdU(hit->getdU());
-            hit_new->setdV(hit->getdV());
-            hit_new->setEDep(hit->getEDep());
-            hit_new->setEDepError(hit->getEDepError());
-            hit_new->setTime(hit->getTime());
-            hit_new->setQuality(hit->getQuality());
-
-            outputTrackerHitColls[icol]->addElement(hit_new);
-
-            LCRelation *rel = dynamic_cast<LCRelation *>(inputHitRels[icol]->getElementAt(ihit));
-
-            SimTrackerHit *simhit = dynamic_cast<SimTrackerHit *>(rel->getTo());
-            SimTrackerHitImpl *simhit_new = new SimTrackerHitImpl();
-
-            simhit_new->setCellID0(simhit->getCellID0());
-            simhit_new->setCellID1(simhit->getCellID1());
-            simhit_new->setPosition(simhit->getPosition());
-            simhit_new->setEDep(simhit->getEDep());
-            simhit_new->setTime(simhit->getTime());
-            simhit_new->setMCParticle(simhit->getMCParticle());
-            simhit_new->setMomentum(simhit->getMomentum());
-            simhit_new->setPathLength(simhit->getPathLength());
-            simhit_new->setQuality(simhit->getQuality());
-            simhit_new->setOverlay(simhit->isOverlay());
-            simhit_new->setProducedBySecondary(simhit->isProducedBySecondary());
-
-            outputTrackerSimHitColls[icol]->addElement(simhit_new);
-
-            LCRelationImpl *rel_new = new LCRelationImpl();
-
-            rel_new->setFrom(hit_new);
-            rel_new->setTo(simhit_new);
-            rel_new->setWeight(rel->getWeight());
-
-            outputTrackerHitRels[icol]->addElement(rel_new);
-
-        } // ihit loop
-
-        streamlog_out(MESSAGE) << " " << hits_to_save[icol].size() << " hits added to the collections: "
+        
+        streamlog_out(MESSAGE) << " " << outputTrackerHitCol->getNumberOfElements() << " hits added to the collections: "
                                << m_outputTrackerHitsCollNames[icol] << ", "
                                << m_outputTrackerSimHitsCollNames[icol] << ", "
                                << m_outputTrackerHitRelNames[icol] << std::endl;
 
-        evt->addCollection(outputTrackerHitColls[icol], m_outputTrackerHitsCollNames[icol]);
-        evt->addCollection(outputTrackerSimHitColls[icol], m_outputTrackerSimHitsCollNames[icol]);
-        evt->addCollection(outputTrackerHitRels[icol], m_outputTrackerHitRelNames[icol]);
+        evt->addCollection(outputTrackerHitCol, m_outputTrackerHitsCollNames[icol]);
+        evt->addCollection(outputTrackerSimHitCol, m_outputTrackerSimHitsCollNames[icol]);
+        outputTrackerHitRel = thitNav.createLCCollection();
+        evt->addCollection( outputTrackerHitRel, m_outputTrackerHitRelNames[icol]);
 
-        streamlog_out(DEBUG5) << " output collection " << m_outputTrackerHitsCollNames[icol] << " of type "
-                              << outputTrackerHitColls[icol]->getTypeName() << " added to the event \n"
+        streamlog_out(DEBUG) << " output collection " << m_outputTrackerHitsCollNames[icol] << " of type "
+                              << outputTrackerHitCol->getTypeName() << " added to the event \n"
                               << " output collection " << m_outputTrackerSimHitsCollNames[icol] << " of type "
-                              << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event \n"
+                              << outputTrackerSimHitCol->getTypeName() << " added to the event \n"
                               << " output collection " << m_outputTrackerHitRelNames[icol] << " of type "
-                              << outputTrackerHitRels[icol]->getTypeName() << " added to the event  "
+                              <<  outputTrackerHitRel->getTypeName() << " added to the event  "
                               << std::endl;
 
     } // icol loop
