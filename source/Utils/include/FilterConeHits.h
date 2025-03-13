@@ -68,6 +68,7 @@ class FilterConeHits : public Processor {
   // --- Processor parameters:
   bool m_fillHistos{} ;
   double m_deltaRCut{} ;
+  double m_dist3DCut{} ;
 
   // --- Diagnostic histograms:
   TH1F* m_distXY = nullptr ;

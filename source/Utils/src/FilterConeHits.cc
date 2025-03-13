@@ -70,7 +70,12 @@ FilterConeHits::FilterConeHits() : Processor("FilterConeHits") {
   registerProcessorParameter( "DeltaRCut" ,
 			      "Maximum angular distance between the hits and the particle direction" ,
 			      m_deltaRCut,
-			      double(1.) );
+			      double(-1.) );
+
+  registerProcessorParameter( "Dist3DCut" ,
+			      "Maximum distance between the hits and the extrapolated helix" ,
+			      m_dist3DCut,
+			      double(-1.) );
 
   registerProcessorParameter( "FillHistograms",
 			      "Flag to fill the diagnostic histograms",
@@ -297,7 +302,17 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
 
 	}
 	
-	if ( hit_angle < m_deltaRCut )
+  bool save = false;
+
+  if ( m_deltaRCut > 0. ) {
+    if ( hit_angle < m_deltaRCut ) save = true;
+  }
+
+  if ( m_dist3DCut > 0. ) {
+    if ( hit_distance[2] < m_dist3DCut ) save = true;
+  }
+
+	if ( save )
 	  hits_to_save[icol].insert(ihit);
 	
       } // ihit loop

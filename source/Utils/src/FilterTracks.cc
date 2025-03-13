@@ -150,7 +150,10 @@ void FilterTracks::processEvent( LCEvent * evt )
     const std::vector<EVENT::TrackState*>& trackStates = trk->getTrackStates();
     const auto foundCaloState = std::find_if(trackStates.begin(), trackStates.end(), 
                                              [](const auto ts) { return ts->getLocation() == EVENT::TrackState::AtCalorimeter; }) != trackStates.end();
-    if (_HasCaloState && !foundCaloState) { continue; }
+    if (_HasCaloState && !foundCaloState) { 
+      streamlog_out(DEBUG) << "No calo state, skipping track!" << std::endl;
+      continue; 
+    }
 
     if(_BarrelOnly == true) {
       bool endcaphits = false;
