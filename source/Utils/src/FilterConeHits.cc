@@ -164,7 +164,6 @@ void FilterConeHits::processEvent(LCEvent *evt)
   const unsigned int nTrackerHitCol = m_inputTrackerHitsCollNames.size();
   std::vector<LCCollection *> inputHitColls(nTrackerHitCol);
   std::vector<LCCollection *> inputSimHitColls(nTrackerHitCol);
-  std::vector<LCCollection *> inputHitRels(nTrackerHitCol);
 
   std::vector<LCCollectionVec *> outputTrackerHitColls(nTrackerHitCol);
   std::vector<LCCollectionVec *> outputTrackerSimHitColls(nTrackerHitCol);
@@ -197,18 +196,6 @@ void FilterConeHits::processEvent(LCEvent *evt)
       continue;
     }
 
-    // get the reco-sim relations
-    try
-    {
-      inputHitRels[icol] = evt->getCollection(m_inputTrackerHitRelNames[icol]);
-    }
-    catch (lcio::DataNotAvailableException &e)
-    {
-      streamlog_out(WARNING) << m_inputTrackerHitRelNames[icol]
-                             << " collection not available" << std::endl;
-      continue;
-    }
-
     // reco hit output collections
     std::string encoderString = inputHitColls[icol]->getParameters().getStringVal("CellIDEncoding");
     outputTrackerHitColls[icol] = new LCCollectionVec(inputHitColls[icol]->getTypeName());
@@ -226,6 +213,18 @@ void FilterConeHits::processEvent(LCEvent *evt)
 
     // reco-sim relation output collections
     outputTrackerHitRels[icol] = new UTIL::LCRelationNavigator(LCIO::TRACKERHITPLANE, LCIO::SIMTRACKERHIT);
+  }
+
+  // Load relations
+  std::vector<std::shared_ptr<LCRelationNavigator>> hit2simhits;
+  for (const std::string &name : m_inputTrackerHitRelNames)
+  {
+    // Get the collection of tracker hit relations
+    LCCollection *trackerHitRelationCollection = evt->getCollection(name);
+    if (trackerHitRelationCollection == nullptr)
+      continue;
+    std::shared_ptr<LCRelationNavigator> hit2simhit = std::make_shared<LCRelationNavigator>(trackerHitRelationCollection);
+    hit2simhits.push_back(hit2simhit);
   }
 
   // --- Loop over the MC particles:
@@ -315,12 +314,17 @@ void FilterConeHits::processEvent(LCEvent *evt)
 
         if (save)
         {
-          EVENT::LCRelation *rel = static_cast<EVENT::LCRelation *>(inputHitRels[icol]->getElementAt(ihit));
-          SimTrackerHit *simhit = dynamic_cast<SimTrackerHit *>(rel->getTo());
+          // Find the sim hit
+          SimTrackerHit *simhit = nullptr;
+          const LCObjectVec &simHitVector = hit2simhits[icol]->getRelatedToObjects(hit);
+          if (!simHitVector.empty())
+          { // Found the sim hit
+            simhit = dynamic_cast<SimTrackerHit *>(simHitVector.at(0));
 
-          outputTrackerSimHitColls[icol]->addElement(simhit);
-          outputTrackerHitColls[icol]->addElement(hit);
-          outputTrackerHitRels[icol]->addRelation(hit, simhit);
+            outputTrackerSimHitColls[icol]->addElement(simhit);
+            outputTrackerHitColls[icol]->addElement(hit);
+            outputTrackerHitRels[icol]->addRelation(hit, simhit);
+          }
         }
 
       } // ihit loop
