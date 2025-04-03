@@ -55,12 +55,16 @@ class FilterJetConeHits : public Processor {
   virtual void end() ;
 
   bool filterJetBib(ReconstructedParticle* jet);
+
+  void saveJet( ReconstructedParticle* jet, LCCollectionVec* jetsColl );
   
+  void directionCorrection( const double* p, double* pcorr ) ;
   
  protected:
 
   // --- Input/output collection names:
   std::string m_inputJetCaloCollName{} ;
+  std::string m_filteredJetCaloCollName{} ;
   std::vector<std::string> m_inputTrackerHitsCollNames{} ;
   std::vector<std::string> m_inputTrackerSimHitsCollNames{} ;
   std::vector<std::string> m_inputTrackerHitRelNames{} ;
@@ -76,6 +80,14 @@ class FilterJetConeHits : public Processor {
   // Jet filter parameters with BIB:
   double m_minDaughterMaxPt{} ;
   int m_minNTracks{} ;
+  bool m_createFilteredJets{} ;
+
+  // Jet direction correction params
+  bool m_makeDirCorrection{} ;
+  double m_corrConst{};
+  double m_corrLin{};
+  double m_corrQuad{};
+  double m_corrCub{};
 
   // --- Diagnostic histograms:
   TH1F* m_dist = nullptr ;

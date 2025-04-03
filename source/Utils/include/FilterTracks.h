@@ -93,8 +93,18 @@ private:
    //! Cut off for outliers number   
    int _MaxOutl = 10;  
 
+   //! Cut off for ratio outliers/tot hits
+   float _MaxOutlOverHits = 1.;  
+
    //! Cut off for spatial and temporal chi squared values
    float _Chi2Spatial = 0;
+
+   //! Cut off for all track parameters uncertainties
+   float _MaxSigD0 = 999;
+   float _MaxSigZ0 = 999;
+   float _MaxSigTheta = 999;
+   float _MaxSigPhi = 999;
+   float _MaxSigQoverP = 999;
 
    //! NN parameters
    std::string _NNmethod = ""; // if defined apply the NN
