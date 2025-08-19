@@ -16,6 +16,8 @@
 
 #include "HelixClass_double.h"
 
+#include <algorithm>
+
 using namespace lcio ;
 using namespace marlin ;
 
@@ -71,12 +73,16 @@ FilterConeHits::FilterConeHits() : Processor("FilterConeHits") {
 			      "Maximum angular distance between the hits and the particle direction" ,
 			      m_deltaRCut,
 			      double(1.) );
-
+   
   registerProcessorParameter( "FillHistograms",
 			      "Flag to fill the diagnostic histograms",
 			      m_fillHistos,
 			      false );
 
+  registerProcessorParameter( "ConeAroundStatus",
+            "List of MCP statuses from Pythia to cone around. Default is 1", 
+            m_coneAroundStatus,
+            std::vector<int>{1} );
     
 }
 
@@ -235,9 +241,11 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
 
     MCParticle* part = dynamic_cast<MCParticle*>( m_inputMCParticles->getElementAt(ipart) );
 
-    // --- Keep only the generator-level particles:
-    if ( part->getGeneratorStatus() != 1 && status != 22 && status != 51 && status != 52 ) continue;
-
+    const int genStat = part->getGeneratorStatus();
+    if ( std::find(m_coneAroundStatus.begin(), m_coneAroundStatus.end(), genStat) == m_coneAroundStatus.end() ) {
+      continue;
+    }
+    
     double part_p = sqrt( part->getMomentum()[0]*part->getMomentum()[0] +
 			  part->getMomentum()[1]*part->getMomentum()[1] +
 			  part->getMomentum()[2]*part->getMomentum()[2] );
