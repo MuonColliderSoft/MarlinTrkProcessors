@@ -211,7 +211,6 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       continue;
     }
 
-    std::cout << "input hit relations collection: " << inputHitRels[icol] << std::endl;
 
     // reco hit output collections
     std::string encoderString = inputHitColls[icol]->getParameters().getStringVal( "CellIDEncoding" );
@@ -251,10 +250,6 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
 			  part->getMomentum()[1]*part->getMomentum()[1] +
 			  part->getMomentum()[2]*part->getMomentum()[2] );
     
-    std::cout << "[MCP LOOP]: ipart: " << ipart << std::endl;
-    std::cout << "[MCP LOOP]: pdg " << part->getPDG() << std::endl;
-    std::cout << "[MCP LOOP]: momentum: " << part->getMomentum()[0] << ", " << part->getMomentum()[1] << ", " << part->getMomentum()[2] << std::endl;
-
     HelixClass_double helix;
     helix.Initialize_VP( (double*) part->getVertex(), (double*) part->getMomentum(),
 			 (double) part->getCharge(), m_magneticField );
@@ -344,11 +339,8 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       hit_new->setTime(hit->getTime());
       hit_new->setQuality(hit->getQuality());   
 
-      std::cout << std::fixed << std::setprecision(3);
       const double* reco_pos = hit->getPosition();
       const auto reco_time = hit->getTime();
-      std::cout << "[RECO HIT]: position " << reco_pos[0] << ", " << reco_pos[1] << ", " << reco_pos[2] << std::endl;
-      std::cout << "[RECO HIT]: time " << reco_time << std::endl;
 
       outputTrackerHitColls[icol]->addElement( hit_new );
 
@@ -361,14 +353,6 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
         bool hasMC = (sim && sim->getMCParticle());
         if (hasMC) ++mc; else ++nullmc;
       }
-
-      std::cout << "[per-hit] " << m_inputTrackerHitsCollNames[icol]
-                << "[" << ihit << "] candidates=" << tos.size()
-                << " withMC=" << mc << " nullMC=" << nullmc << std::endl;
-
-
-      //LCRelation* rel = dynamic_cast<LCRelation*>(inputHitRels[icol]->getElementAt(ihit));
-      //SimTrackerHit* simhit = dynamic_cast<SimTrackerHit*>(rel->getTo());
 
       std::vector<LCObject*> cands = nav.getRelatedToObjects(hit);
       std::vector<float> wts = nav.getRelatedToWeights(hit);
@@ -394,18 +378,6 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
 
       auto* simhit_new = new SimTrackerHitImpl();
 
-      // auto* fromObj = rel ? rel->getFrom() : nullptr;
-      // auto* toObj   = rel ? rel->getTo()   : nullptr;
-
-      // std::cout << "[align] hits[" << ihit << "]@" << (void*)hit
-      //           << "  rel[" << ihit << "] from@" << (void*)fromObj
-      //           << "  to@" << (void*)toObj
-      //           << "  from==hit? " << (fromObj==hit) << std::endl; 
-      
-      // SimTrackerHit* simhit = dynamic_cast<SimTrackerHit*>(rel->getTo());
-
-      // SimTrackerHitImpl* simhit_new = new SimTrackerHitImpl();
-
       simhit_new->setCellID0(simhit->getCellID0());
       simhit_new->setCellID1(simhit->getCellID1());
       simhit_new->setPosition(simhit->getPosition());
@@ -419,31 +391,14 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       simhit_new->setProducedBySecondary(simhit->isProducedBySecondary());
 
       outputTrackerSimHitColls[icol]->addElement( simhit_new );
-
       
-      // LCRelationImpl* rel_new = new LCRelationImpl();
       auto* rel_new = new LCRelationImpl(hit_new, simhit_new, bestW);
       outputTrackerHitRels[icol]->addElement(rel_new);
       
-      // rel_new->setFrom(hit_new);
-      // rel_new->setTo(simhit_new);
-      // rel_new->setWeight(rel->getWeight());
-
       auto* mcp_sim = simhit->getMCParticle();
       const float* p_sim = simhit->getMomentum();
       const double* sim_pos = simhit->getPosition();
-      const auto sim_time = simhit->getTime();
-
-      std::cout << std::fixed << std::setprecision(3);
-      std::cout << "[SIM HIT]: position" << sim_pos[0] << ", " << sim_pos[1] << ", " << sim_pos[2] << std::endl;
-
-      std::cout << "[SIM HIT]: mcparticle: " << mcp_sim
-                <<(mcp_sim ? ("PDG = " + std::to_string(mcp_sim->getPDG())) : "") << "\n";
-      std::cout << "[SIM HIT]: momentum: [" << p_sim[0] << ", " << p_sim[1] << ", " << p_sim[2] << "]\n";
-      std::cout << "[SIM HIT]: time: " << sim_time << std::endl;
-      
-      // outputTrackerHitRels[icol]->addElement( rel_new );
-
+      const auto sim_time = simhit->getTime(); 
     } // ihit loop
 
     std::cout << " " << hits_to_save[icol].size() << " hits added to the collections: "
@@ -457,9 +412,7 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
     evt->addCollection( outputTrackerHitColls[icol], m_outputTrackerHitsCollNames[icol] ) ;
     evt->addCollection( outputTrackerSimHitColls[icol], m_outputTrackerSimHitsCollNames[icol] ) ;
     evt->addCollection( outputTrackerHitRels[icol], m_outputTrackerHitRelNames[icol] ) ;
-
-    std::cout << "output tracker hit rels collection: " << m_outputTrackerHitRelNames[icol] << " at " << outputTrackerHitRels[icol] << " now has " << (outputTrackerHitRels[icol] ? outputTrackerHitRels[icol]->getNumberOfElements() : 0) << " elements " << std::endl;
-
+ 
   } // icol loop
 
   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() 
