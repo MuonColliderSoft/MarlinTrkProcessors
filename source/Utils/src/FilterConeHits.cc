@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <set>
+#include <iomanip>
 
 #include <EVENT/MCParticle.h>
 
@@ -29,7 +30,6 @@ FilterConeHits::FilterConeHits() : Processor("FilterConeHits") {
   _description = "FilterConeHits selects tracker hits in a cone opened around a MC particle direction";
 
   // --- Processor parameters:
-
   registerProcessorParameter("MCParticleCollection", "Name of the MCParticle collection", m_inputMCParticlesCollName,
                              std::string("MCParticle"));
 
@@ -58,6 +58,12 @@ FilterConeHits::FilterConeHits() : Processor("FilterConeHits") {
                              double(-1.));
 
   registerProcessorParameter("FillHistograms", "Flag to fill the diagnostic histograms", m_fillHistos, false);
+
+  registerProcessorParameter( "ConeAroundStatus",
+            "List of MC Particle statuses to build cones around. Default is 1", 
+            m_coneAroundStatus,
+            std::vector<int>{1} );
+
 }
 
 void FilterConeHits::init() {
@@ -91,6 +97,8 @@ void FilterConeHits::init() {
 void FilterConeHits::processRunHeader(LCRunHeader*) { _nRun++; }
 
 void FilterConeHits::processEvent(LCEvent* evt) {
+  
+  streamlog_out(DEBUG) << "[FilterConeHits] processEvent run=" << evt->getRunNumber() << " evt=" << evt->getEventNumber() << std::endl;
   // --- Check whether the number of input and output collections match
 
   if (m_inputTrackerHitsCollNames.size() != m_inputTrackerSimHitsCollNames.size() ||
@@ -146,6 +154,7 @@ void FilterConeHits::processEvent(LCEvent* evt) {
       continue;
     }
 
+
     // reco hit output collections
     std::string encoderString = inputHitColls[icol]->getParameters().getStringVal("CellIDEncoding");
     outputTrackerHitColls[icol] = new LCCollectionVec(inputHitColls[icol]->getTypeName());
@@ -181,13 +190,14 @@ void FilterConeHits::processEvent(LCEvent* evt) {
   for (int ipart = 0; ipart < m_inputMCParticles->getNumberOfElements(); ++ipart) {
     MCParticle* part = dynamic_cast<MCParticle*>(m_inputMCParticles->getElementAt(ipart));
 
-    // --- Keep only the generator-level particles:
-    if (part->getGeneratorStatus() != 1)
+    const int genStat = part->getGeneratorStatus();
+    if ( std::find(m_coneAroundStatus.begin(), m_coneAroundStatus.end(), genStat) == m_coneAroundStatus.end() ) {
       continue;
-
-    double part_p =
-        sqrt(part->getMomentum()[0] * part->getMomentum()[0] + part->getMomentum()[1] * part->getMomentum()[1] +
-             part->getMomentum()[2] * part->getMomentum()[2]);
+    }
+    
+    double part_p = sqrt( part->getMomentum()[0]*part->getMomentum()[0] +
+			  part->getMomentum()[1]*part->getMomentum()[1] +
+			  part->getMomentum()[2]*part->getMomentum()[2] );
 
     HelixClass_double helix;
     helix.Initialize_VP((double*)part->getVertex(), (double*)part->getMomentum(), (double)part->getCharge(),
@@ -280,7 +290,6 @@ void FilterConeHits::processEvent(LCEvent* evt) {
                           << outputTrackerHitColls[icol]->getTypeName() << " added to the event \n"
                           << " output collection " << m_outputTrackerSimHitsCollNames[icol] << " of type "
                           << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event " << std::endl;
-
   } // icol loop
 
   streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber()

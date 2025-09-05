@@ -24,6 +24,7 @@ using namespace marlin;
  *  @parameter TrackerHitOutputRelations name of the tracker hit relation output collections
  *  @parameter DeltaRCut maximum angular distance between the hits and the particle direction
  *  @parameter FillHistograms flag to fill the diagnostic histograms
+ *  @parameter ConeAroundStatus list of generator statuses that we can choose to cone around
  *
  * @author M. Casarsa, INFN Trieste
  * @date  22 January 2021
@@ -62,6 +63,9 @@ protected:
   bool m_fillHistos{};
   double m_deltaRCut{};
   double m_dist3DCut{};
+
+  // Coning around MCParticles whose generator status is in this list, given in steering file
+  std::vector<int> m_coneAroundStatus{};
 
   // --- Diagnostic histograms:
   TH1F* m_distXY = nullptr;
