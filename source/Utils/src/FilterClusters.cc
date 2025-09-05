@@ -278,7 +278,7 @@ void FilterClusters::processEvent(LCEvent *evt)
         float max_theta = _thetaBins_byLayer[layerInd][j + 1];
         streamlog_out(DEBUG0) << "theta range: " << min_theta << ", " << max_theta << std::endl;
 
-        if (incidentTheta >= min_theta and incidentTheta <= max_theta and filter_layer)
+        if (incidentTheta >= min_theta && incidentTheta <= max_theta && filter_layer)
         {
           streamlog_out(DEBUG0) << "theta in range" << std::endl;
           streamlog_out(DEBUG0) << "cluster size cut off: " << _clusterSizeCuts_byLayer[layerInd][j] << std::endl;
