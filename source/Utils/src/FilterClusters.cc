@@ -160,8 +160,8 @@ void FilterClusters::processEvent(LCEvent* evt) {
         xmax = x_local;
       }
     }
-    float cluster_size_y = (ymax - ymin) + 1;
-    float cluster_size_x = (xmax - xmin) + 1;
+    //float cluster_size_y = (ymax - ymin) + 1;
+    //float cluster_size_x = (xmax - xmin) + 1;
     float cluster_size = rawHits.size();
 
     streamlog_out(DEBUG2) << "Cluster size:" << cluster_size << std::endl;
@@ -175,7 +175,7 @@ void FilterClusters::processEvent(LCEvent* evt) {
 
     streamlog_out(DEBUG3) << "Decoded system/layer:" << systemID << "/" << layerID << std::endl;
 
-    int rows = _Layers.size(), cols = std::stoi(_ThetaBins);
+    size_t rows = _Layers.size(), cols = std::stoi(_ThetaBins);
     if ((rows * (cols + 1) != _ThetaRanges.size()) || (rows * cols != _ClusterSize.size())) {
       std::cout
           << "Either theta cuts or cluster cuts not provided for each layer. Please change the config, exiting now..."
@@ -186,17 +186,17 @@ void FilterClusters::processEvent(LCEvent* evt) {
     std::vector<std::vector<float>> _thetaBins_byLayer;
     std::vector<std::vector<float>> _clusterSizeCuts_byLayer;
 
-    for (int k = 0; k < rows; ++k) {
+    for (size_t k = 0; k < rows; ++k) {
       std::vector<float> row;
-      for (int j = 0; j <= cols; ++j) {
+      for (size_t j = 0; j <= cols; ++j) {
         row.push_back(std::stof(_ThetaRanges[j + k * (cols + 1)]));
       }
       _thetaBins_byLayer.push_back(row);
     }
 
-    for (int k = 0; k < rows; ++k) {
+    for (size_t k = 0; k < rows; ++k) {
       std::vector<float> row;
-      for (int j = 0; j < cols; ++j) {
+      for (size_t j = 0; j < cols; ++j) {
         row.push_back(std::stof(_ClusterSize[j + k * cols]));
       }
       _clusterSizeCuts_byLayer.push_back(row);
