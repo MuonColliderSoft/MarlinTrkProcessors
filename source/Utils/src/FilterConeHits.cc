@@ -27,6 +27,7 @@ using namespace marlin ;
 FilterConeHits aFilterConeHits ;
 
 void FilterConeHits::processRunHeader( EVENT::LCRunHeader* h ) {
+  (void)h;
   _nRun++ ;
 }
 
@@ -344,8 +345,8 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
 
       outputTrackerHitColls[icol]->addElement( hit_new );
 
-      const auto& tos = nav.getRelatedToObjects( hit );
-      const auto& ws  = nav.getRelatedToWeights( hit );
+      std::vector<LCObject*> cands = nav.getRelatedToObjects(hit);
+      std::vector<float> wts = nav.getRelatedToWeights(hit);
 
       int mc = 0, nullmc = 0;
       for (size_t k = 0; k < tos.size(); ++k) {
@@ -353,9 +354,6 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
         bool hasMC = (sim && sim->getMCParticle());
         if (hasMC) ++mc; else ++nullmc;
       }
-
-      std::vector<LCObject*> cands = nav.getRelatedToObjects(hit);
-      std::vector<float> wts = nav.getRelatedToWeights(hit);
 
       SimTrackerHit* simhit = nullptr;
       float bestW = -1.0f;
