@@ -160,8 +160,8 @@ void FilterClusters::processEvent(LCEvent* evt) {
         xmax = x_local;
       }
     }
-    //float cluster_size_y = (ymax - ymin) + 1;
-    //float cluster_size_x = (xmax - xmin) + 1;
+    // float cluster_size_y = (ymax - ymin) + 1;
+    // float cluster_size_x = (xmax - xmin) + 1;
     float cluster_size = rawHits.size();
 
     streamlog_out(DEBUG2) << "Cluster size:" << cluster_size << std::endl;
