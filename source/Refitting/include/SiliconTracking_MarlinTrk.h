@@ -181,17 +181,6 @@ class LCRelationNavigator;
  */
 class SiliconTracking_MarlinTrk : public Processor {
 public:
-<<<<<<< HEAD
-  
-  virtual Processor*  newProcessor() { return new SiliconTracking_MarlinTrk ; }
-  
-  
-  SiliconTracking_MarlinTrk() ;
-  SiliconTracking_MarlinTrk(const SiliconTracking_MarlinTrk&) = delete ;
-  SiliconTracking_MarlinTrk& operator=(const SiliconTracking_MarlinTrk&) = delete ;
-  
-  /**  
-=======
   virtual Processor* newProcessor() { return new SiliconTracking_MarlinTrk; }
 
   SiliconTracking_MarlinTrk();
@@ -199,7 +188,6 @@ public:
   SiliconTracking_MarlinTrk& operator=(const SiliconTracking_MarlinTrk&) = delete;
 
   /**
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
    * Initialization
    */
   virtual void init();
@@ -219,26 +207,6 @@ public:
   virtual void end();
 
 protected:
-<<<<<<< HEAD
-  
-  int _nRun {};
-  int _nEvt {};
-  EVENT::LCEvent* _current_event{nullptr};
-  
-  int _nDivisionsInPhi{};
-  int _nDivisionsInTheta{};
-  int _nLayers{};
-  
-  MarlinTrk::HelixFit* _fastfitter{nullptr};
-  
-  /** pointer to the IMarlinTrkSystem instance 
-   */
-  MarlinTrk::IMarlinTrkSystem* _trksystem {nullptr};
-  bool _runMarlinTrkDiagnostics{};
-  std::string _MarlinTrkDiagnosticsName{};
-  
-  bool _MSOn{}, _ElossOn{}, _SmoothOn {};
-=======
   int _nRun{};
   int _nEvt{};
   EVENT::LCEvent* _current_event{nullptr};
@@ -256,29 +224,12 @@ protected:
   std::string _MarlinTrkDiagnosticsName{};
 
   bool _MSOn{}, _ElossOn{}, _SmoothOn{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   /** switches: False for backward compatible (default).
                 True to apply new methods.
    */
   bool _useSimpleUpdatedCoreBin{};
   bool _useSimpleAttachHitToTrack{};
-<<<<<<< HEAD
-
-  float _initialTrackError_d0{};
-  float _initialTrackError_phi0{};
-  float _initialTrackError_omega{};
-  float _initialTrackError_z0{};
-  float _initialTrackError_tanL{};
-  
-  double _maxChi2PerHit{};  
-  
-  bool  _UseEventDisplay{};
-  int _detector_model_for_drawing{};
-  std::vector<int> _colours{};  
-  float     _helix_max_r{};
-  
-=======
 
   float _initialTrackError_d0{};
   float _initialTrackError_phi0{};
@@ -293,27 +244,15 @@ protected:
   std::vector<int> _colours{};
   float _helix_max_r{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   void drawEvent();
 
   // histogram member variables
-<<<<<<< HEAD
-  
-  bool  _createDiagnosticsHistograms{};
-  DiagnosticsHistograms::Histograms* _histos{nullptr};
-
-  
-  int _ntriplets{}, _ntriplets_good{}, _ntriplets_2MCP{}, _ntriplets_3MCP{}, _ntriplets_1MCP_Bad{}, _ntriplets_bad{};
-  
-  
-=======
 
   bool _createDiagnosticsHistograms{};
   DiagnosticsHistograms::Histograms* _histos{nullptr};
 
   int _ntriplets{}, _ntriplets_good{}, _ntriplets_2MCP{}, _ntriplets_3MCP{}, _ntriplets_1MCP_Bad{}, _ntriplets_bad{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** helper function to get collection using try catch block */
   LCCollection* GetCollection(LCEvent* evt, std::string colName);
 
@@ -322,16 +261,9 @@ protected:
 
   /** input MCParticle collection and threshold used for Drawing
    */
-<<<<<<< HEAD
-  std::string  _colNameMCParticles{};
-  float _MCpThreshold {};
-  
-  
-=======
   std::string _colNameMCParticles{};
   float _MCpThreshold{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /// Compare tracks according to their chi2/ndf
   struct compare_TrackExtended {
     // n.b.: a and b should be TrackExtended const *, but the getters are not const :-(
@@ -341,26 +273,11 @@ protected:
       return (a->getChi2() / a->getNDF() < b->getChi2() / b->getNDF());
     }
   };
-<<<<<<< HEAD
-  
-  
-=======
-
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   std::string _VTXHitCollection{};
   std::string _FTDPixelHitCollection{};
   std::string _FTDSpacePointCollection{};
   std::string _SITHitCollection{};
   std::string _siTrkCollection{};
-<<<<<<< HEAD
-  
-  std::vector< LCCollection* > _colTrackerHits{};
-  std::map< LCCollection*, std::string > _colNamesTrackerHits{};
-  
-  std::vector<TrackerHitExtendedVec> _sectors{};
-  std::vector<TrackerHitExtendedVec> _sectorsFTD{};
-  
-=======
 
   std::vector<LCCollection*> _colTrackerHits{};
   std::map<LCCollection*, std::string> _colNamesTrackerHits{};
@@ -368,7 +285,6 @@ protected:
   std::vector<TrackerHitExtendedVec> _sectors{};
   std::vector<TrackerHitExtendedVec> _sectorsFTD{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /**
    * A helper class to allow good code readability by accessing tracks with N hits.
    * As the smalest valid track contains three hits, but the first index in a vector is 0,
@@ -400,16 +316,6 @@ protected:
     }
 
   protected:
-<<<<<<< HEAD
-    std::vector< TrackExtendedVec > _tracksNHits{};
-    size_t _maxIndex{}; /// local cache variable to avoid calculation overhead
-  };
-  
-  TracksWithNHitsContainer _tracksWithNHitsContainer{};
-  
-  int InitialiseVTX(LCEvent * evt);
-  int InitialiseFTD(LCEvent * evt);
-=======
     std::vector<TrackExtendedVec> _tracksNHits{};
     size_t _maxIndex{}; /// local cache variable to avoid calculation overhead
   };
@@ -418,7 +324,6 @@ protected:
 
   int InitialiseVTX(LCEvent* evt);
   int InitialiseFTD(LCEvent* evt);
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   void ProcessOneSector(int iSectorPhi, int iSectorTheta);
   void CleanUp();
   TrackExtended* TestTriplet(TrackerHitExtended* outerHit, TrackerHitExtended* middleHit, TrackerHitExtended* innerHit,
@@ -439,11 +344,6 @@ protected:
   int AttachHitToTrack(TrackExtended* trackAR, TrackerHitExtended* hit, int iopt);
 
   void FinalRefit(LCCollectionVec* trk_col, LCCollectionVec* rel_col);
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _bField{};
   float _chi2WRPhiTriplet{};
   float _chi2WRPhiQuartet{};
@@ -453,82 +353,6 @@ protected:
   float _chi2WZSeptet{};
   float _minDistCutAttach{};
   int _minimalLayerToAttach{};
-<<<<<<< HEAD
-  
-  // two pi is not a constant in cmath. Calculate it, once!
-  static const double TWOPI;
-  
-  double _dPhi{};
-  double _dTheta{};
-  double _dPhiFTD{};
-  
-
-  
-  std::vector<int> _Combinations{};
-  std::vector<int> _CombinationsFTD{};
-  
-  float _resolutionRPhiVTX{};
-  float _resolutionZVTX{};
-  
-  float _resolutionRPhiFTD{};
-  float _resolutionZFTD{};
-  
-  float _resolutionRPhiSIT{};
-  float _resolutionZSIT{};
-  
-  float _phiCutForMerging{};
-  float _tanlambdaCutForMerging{};
-  float _angleCutForMerging{};
-  
-  int _print{};
-  int _checkForDelta{};
-  float _minDistToDelta{};
-  
-  float _distRPhi{};
-  float _distZ{};
-  float _chi2FitCut{};
-  
-  
-  TrackExtendedVec _trackImplVec{};
-  
-  
-  float _cutOnD0{}, _cutOnZ0{}, _cutOnOmega{}, _cutOnPt{};
-  
-  int _minimalHits{};
-  int _nHitsChi2{};
-  int _attachFast{};
-  
-  int _max_hits_per_sector{};
-  
-  int _nTotalVTXHits{},_nTotalFTDHits{},_nTotalSITHits{};
-  int _useSIT{};
-
-  std::string _trkSystemName {};
-  
-  //  int _createMap;
-  
-  UTIL::BitField64* _encoder{nullptr};
-  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
-  int getSideID(TrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
-  int getLayerID(TrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
-  int getModuleID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::module()]; };
-  int getSensorID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::sensor()]; };
-  
-  void setupGeom(const dd4hep::Detector& theDetector);
-  
-  
-  unsigned int _nLayersVTX{};
-  
-  unsigned int _nLayersSIT{};
-  
-  
-  std::vector<float> _zLayerFTD{};
-  
-  unsigned int _nlayersFTD{};
-  bool _petalBasedFTDWithOverlaps{};
-  int _nPhiFTD{};
-
-=======
 
   // two pi is not a constant in cmath. Calculate it, once!
   static const double TWOPI;
@@ -612,7 +436,6 @@ protected:
   bool _petalBasedFTDWithOverlaps{};
   int _nPhiFTD{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   int _output_track_col_quality{};
   static const int _output_track_col_quality_GOOD;
   static const int _output_track_col_quality_FAIR;
