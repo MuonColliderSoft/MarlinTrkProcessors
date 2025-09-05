@@ -150,8 +150,8 @@ void RefitFinal::processEvent(LCEvent* evt) {
 
     for (int iHit = 0; iHit < nHitsTrack && iHit < nHitsTrack; ++iHit) {
       marlin_trk->addHit(trkHits[iHit]);
-      encoder.setValue(trkHits[iHit]->getCellID0()) ;
-      ++hitInSubDet[encoder[UTIL::LCTrackerCellID::subdet()]];      
+      _encoder->setValue(trkHits[iHit]->getCellID0());
+      ++hitInSubDet[_encoder->getValue(UTIL::LCTrackerCellID::subdet())];
     }
 
     int init_status = FitInit2(track, marlin_trk.get());

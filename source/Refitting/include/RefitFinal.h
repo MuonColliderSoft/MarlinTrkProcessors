@@ -15,6 +15,13 @@ class IMarlinTrack;
 } // namespace MarlinTrk
 
 class RefitFinal : public marlin::Processor {
+
+  /// Nhits cut struct
+  struct NHitsCut{
+    std::vector<int> detIDs {} ; // list of detectors IDs from which hits will be summed
+    int nHits_min {}; // minimum number of hits
+  };
+
 public:
   virtual marlin::Processor* newProcessor() { return new RefitFinal; }
 
