@@ -11,9 +11,9 @@
 #include <cfloat>
 
 namespace MarlinTrk {
-  class IMarlinTrkSystem;
-  class IMarlinTrack;
-}
+class IMarlinTrkSystem;
+class IMarlinTrack;
+} // namespace MarlinTrk
 
 class ClonesAndSplitTracksFinder : public marlin::Processor {
 public:
@@ -51,7 +51,8 @@ protected:
   // Merges hits from two tracks in one and fits it
   void mergeAndFit(Track*, Track*, Track*&);
 
-  // Removes doubles (from clone treatments and track merging) and filters multiple connections (clones and mergeable tracks treated differently)
+  // Removes doubles (from clone treatments and track merging) and filters multiple connections (clones and mergeable
+  // tracks treated differently)
   void filterClonesAndMergedTracks(std::multimap<int, std::pair<int, Track*>>&, LCCollection*&, TrackVec&, bool);
 
   // Contains the whole merging procedure (calls filterClonesAndMergedTracks(bool false) and mergeAndFit)
@@ -83,13 +84,13 @@ protected:
   int _n_run = -1;
   int _n_evt = -1;
 
-  bool   _MSOn               = true;
-  bool   _ElossOn            = true;
-  bool   _SmoothOn           = false;
-  double _magneticField      = 0.0;
-  bool   _extrapolateForward = true;
+  bool _MSOn = true;
+  bool _ElossOn = true;
+  bool _SmoothOn = false;
+  double _magneticField = 0.0;
+  bool _extrapolateForward = true;
 
-  double _minPt                = 1.0;
+  double _minPt = 1.0;
   double _maxSignificanceTheta = 0.0, _maxSignificancePhi = 0.0, _maxSignificancePt = 0.0;
 
   bool _mergeSplitTracks = false;

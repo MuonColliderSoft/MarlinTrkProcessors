@@ -1,13 +1,14 @@
 #ifndef DDCellsAutomatonMV_h
 #define DDCellsAutomatonMV_h 1
 
-#include <algorithm>
 #include "Math/ProbFunc.h"
+#include <algorithm>
 
-#include <marlin/Processor.h>
-#include <marlin/Global.h>
 #include "marlin/VerbosityLevels.h"
+#include <marlin/Global.h>
+#include <marlin/Processor.h>
 
+#include "UTIL/LCTrackerConf.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/TrackerHit.h>
 #include <EVENT/TrackerHitPlane.h>
@@ -16,45 +17,37 @@
 #include <IMPL/TrackImpl.h>
 #include <IMPL/TrackerHitPlaneImpl.h>
 #include <UTIL/BitField64.h>
-#include "UTIL/LCTrackerConf.h"
 
 // KiTrack tools
-#include "KiTrack/SubsetHopfieldNN.h"
-#include "KiTrack/SubsetSimple.h"
-#include "KiTrack/SegmentBuilder.h"
 #include "KiTrack/Automaton.h"
 #include "KiTrack/Segment.h"
+#include "KiTrack/SegmentBuilder.h"
+#include "KiTrack/SubsetHopfieldNN.h"
+#include "KiTrack/SubsetSimple.h"
 
 // KiTrackMarlin toools
-#include "ILDImpl/VXDTrack.h"
+#include "Criteria/Criteria.h"
+#include "ILDImpl/MiniVectorHit01.h"
+#include "ILDImpl/SectorSystemVXD.h"
 #include "ILDImpl/VXDHit01.h"
 #include "ILDImpl/VXDSectorConnector.h"
-#include "Tools/KiTrackMarlinTools.h"
-#include "Tools/KiTrackMarlinCEDTools.h"
+#include "ILDImpl/VXDTrack.h"
 #include "KiTrack/ITrack.h"
-#include "Criteria/Criteria.h"
-#include "ILDImpl/SectorSystemVXD.h"
+#include "Tools/KiTrackMarlinCEDTools.h"
+#include "Tools/KiTrackMarlinTools.h"
 #include "Tools/VXDHelixFitter.h"
-#include "ILDImpl/MiniVectorHit01.h"
-
-
-
-
 
 // IMarlin tools
-#include "MarlinTrk/IMarlinTrkSystem.h"
 #include "MarlinTrk/IMarlinTrack.h"
+#include "MarlinTrk/IMarlinTrkSystem.h"
 /* #include "MarlinTrk/Factory.h" */
 #include "MarlinTrk/MarlinTrkUtils.h"
 
-
-//DD4HEP
+// DD4HEP
 /* #include "DDRec/Surface.h" */
 /* #include "DD4hep/LCDD.h" */
 /* #include "DD4hep/DD4hepUnits.h" */
 /* #include "DDRec/SurfaceManager.h" */
-
-
 
 ////// FOR TEST VXDFitter
 
@@ -62,24 +55,23 @@
 #include "EVENT/TrackerHit.h"
 #include "lcio.h"
 
-
-
 using namespace lcio;
 
-using namespace lcio ;
-using namespace marlin ;
-using namespace std ;
+using namespace lcio;
+using namespace marlin;
+using namespace std;
 using namespace KiTrack;
 using namespace KiTrackMarlin;
-namespace MarlinTrk{
-  class IMarlinTrkSystem ;
+namespace MarlinTrk {
+class IMarlinTrkSystem;
 }
 
 /** a simple typedef, making writing shorter. And it makes sense: a track consists of hits. But as a real track
  * has more information, a vector of hits can be considered as a "raw track". */
-typedef std::vector< IHit* > RawTrack;
+typedef std::vector<IHit*> RawTrack;
 
 class DDCellsAutomatonMV : public Processor {
+<<<<<<< HEAD
   
  public:
  
@@ -90,6 +82,15 @@ class DDCellsAutomatonMV : public Processor {
   DDCellsAutomatonMV(const DDCellsAutomatonMV&) = delete ;
   DDCellsAutomatonMV& operator=(const DDCellsAutomatonMV&) = delete ;
   
+=======
+public:
+  virtual Processor* newProcessor() { return new DDCellsAutomatonMV; }
+
+  DDCellsAutomatonMV();
+  DDCellsAutomatonMV(const DDCellsAutomatonMV&) = delete;
+  DDCellsAutomatonMV& operator=(const DDCellsAutomatonMV&) = delete;
+
+>>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -97,23 +98,28 @@ class DDCellsAutomatonMV : public Processor {
 
   /** Called for every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
+  virtual void processRunHeader(LCRunHeader* run);
+
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
+  virtual void end();
 
-  
+protected:
+  int nEvt{};
 
+  int _nDivisionsInPhi{};
+  int _nDivisionsInTheta{};
+  int _nDivisionsInPhiMV{};
+  int _nDivisionsInThetaMV{};
+  int _nLayers{};
 
+<<<<<<< HEAD
  protected:
   int nEvt{};
 
@@ -123,11 +129,14 @@ class DDCellsAutomatonMV : public Processor {
   int _nDivisionsInThetaMV{};
   int _nLayers{};
 
+=======
+>>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _bField{};
 
   // two pi is not a constant in cmath. Calculate it, once!
   static const double TWOPI;
   UTIL::BitField64* _encoder{nullptr};
+<<<<<<< HEAD
   int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
   int getSideID(TrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
   int getLayerID(TrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
@@ -139,17 +148,45 @@ class DDCellsAutomatonMV : public Processor {
 
   unsigned int _nLayersVTX{};
   unsigned int _nLayersSIT{};
+=======
+  int getDetectorID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::subdet()];
+  }
+  int getSideID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::side()];
+  };
+  int getLayerID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::layer()];
+  };
+  int getModuleID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::module()];
+  };
+  int getSensorID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::sensor()];
+  };
 
-  void InitialiseVTX(LCEvent * evt, EVENT::TrackerHitVec HitsTemp);
-  void setupGeom() ;
-  bool setCriteria( unsigned round );
-  void RawTrackFit( std::vector < MarlinTrk::IMarlinTrack* > candMarlinTracks, std::vector< IMPL::TrackImpl* > &finalTracks ) ;
-  void FitFunc2( std::vector < RawTrack > rawTracks, std::vector < MarlinTrk::IMarlinTrack* > &candMarlinTracks ) ;
-  void finaliseTrack( TrackImpl* trackImpl ) ;   
-  void CreateMiniVectors( int sector ) ;
-  bool thetaAgreement( EVENT::TrackerHit *toHit, EVENT::TrackerHit *fromHit ) ;
-  bool thetaAgreementImproved( EVENT::TrackerHit *toHit, EVENT::TrackerHit *fromHit, int layer ) ;
-  double Dist( EVENT::TrackerHit *toHit, EVENT::TrackerHit *fromHit ) ;
+  double _dPhi{};
+  double _dTheta{};
+>>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
+
+  unsigned int _nLayersVTX{};
+  unsigned int _nLayersSIT{};
+
+  void InitialiseVTX(LCEvent* evt, EVENT::TrackerHitVec HitsTemp);
+  void setupGeom();
+  bool setCriteria(unsigned round);
+  void RawTrackFit(std::vector<MarlinTrk::IMarlinTrack*> candMarlinTracks, std::vector<IMPL::TrackImpl*>& finalTracks);
+  void FitFunc2(std::vector<RawTrack> rawTracks, std::vector<MarlinTrk::IMarlinTrack*>& candMarlinTracks);
+  void finaliseTrack(TrackImpl* trackImpl);
+  void CreateMiniVectors(int sector);
+  bool thetaAgreement(EVENT::TrackerHit* toHit, EVENT::TrackerHit* fromHit);
+  bool thetaAgreementImproved(EVENT::TrackerHit* toHit, EVENT::TrackerHit* fromHit, int layer);
+  double Dist(EVENT::TrackerHit* toHit, EVENT::TrackerHit* fromHit);
 
   /** A map to store the hits according to their sectors */
   std::map<int, EVENT::TrackerHitVec> _map_sector_spacepoints{};
@@ -239,6 +276,7 @@ class DDCellsAutomatonMV : public Processor {
 
   /** The quality of the output track collection */
   int _output_track_col_quality{};
+<<<<<<< HEAD
 
   static const int _output_track_col_quality_GOOD;
   static const int _output_track_col_quality_FAIR;
@@ -247,146 +285,100 @@ class DDCellsAutomatonMV : public Processor {
   std::string _bestSubsetFinder{};
 
 } ;
+=======
+>>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
+  static const int _output_track_col_quality_GOOD;
+  static const int _output_track_col_quality_FAIR;
+  static const int _output_track_col_quality_POOR;
 
+  std::string _bestSubsetFinder{};
+};
 
 //****************************************************************************************************
 // Quality - compatibility for ITrack version
 
-
 /** A functor to return whether two tracks are compatible: The criterion is if they share a MiniVector or more */
-class TrackCompatibilityShare1_MV{
-  
+class TrackCompatibilityShare1_MV {
 public:
-   
-   inline bool operator()( ITrack* trackA, ITrack* trackB ){
-      
-      
-      std::vector< IHit* > hitsA = trackA->getHits();
-      std::vector< IHit* > hitsB = trackB->getHits();
-     
-      for( unsigned i=0; i < hitsA.size(); i++){
-         
-         for( unsigned j=0; j < hitsB.size(); j++){
-            
-            if ( hitsA[i] == hitsB[j] ) return false;      // a hit is shared -> incompatible
-            
-         }
-         
+  inline bool operator()(ITrack* trackA, ITrack* trackB) {
+    std::vector<IHit*> hitsA = trackA->getHits();
+    std::vector<IHit*> hitsB = trackB->getHits();
+
+    for (unsigned i = 0; i < hitsA.size(); i++) {
+      for (unsigned j = 0; j < hitsB.size(); j++) {
+        if (hitsA[i] == hitsB[j])
+          return false; // a hit is shared -> incompatible
       }
-      
-      return true;      
-      
-   }
-   
+    }
+
+    return true;
+  }
 };
 
-
 /** A functor to return the quality of a track, which is currently the chi2 probability. */
-class TrackQIChi2Prob_MV{
-   
+class TrackQIChi2Prob_MV {
 public:
-   
-   inline double operator()( ITrack* track ){ return track->getChi2Prob(); }
-  
-   
+  inline double operator()(ITrack* track) { return track->getChi2Prob(); }
 };
 
 /** A functor to return the quality of a track, which is the ratio chi2 over degrees of freedom,
-    weighted with the number of associated hits. 
+    weighted with the number of associated hits.
 */
-class TrackQI{
-   
+class TrackQI {
 public:
-   
-  inline double operator()( ITrack* track ){ 
+  inline double operator()(ITrack* track) {
+    float NoOfHits = 4.0 * (track->getHits().size());
 
-    float NoOfHits = 4.0*( track->getHits().size());
-    
-    return (1.0*NoOfHits)/(track->getChi2()/track->getNdf()); }
-  
-   
-};
-
-
-
-
-
-
-/** A functor to return the quality of a track, which is the number of associated hits. 
-*/
-class MaxHits{
-   
-public:
-   
-  inline double operator()( ITrack* track ){
-    
-    return track->getHits().size();
+    return (1.0 * NoOfHits) / (track->getChi2() / track->getNdf());
   }
-   
 };
 
-
+/** A functor to return the quality of a track, which is the number of associated hits.
+ */
+class MaxHits {
+public:
+  inline double operator()(ITrack* track) { return track->getHits().size(); }
+};
 
 /** A functor to return the ....
-*/
-class Test{
-   
+ */
+class Test {
 public:
-   
-  inline double operator()( ITrack* track ){
-    
-    //std::cout<< " ----- track version with nhits = " << track->getHits().size() <<std::endl;
+  inline double operator()(ITrack* track) {
+    // std::cout<< " ----- track version with nhits = " << track->getHits().size() <<std::endl;
 
-    if( track->getHits().size() > 2 ){
-         
-      //std::cout<< " --------  getChi2Prob() = " << track->getChi2Prob()  <<std::endl;
-      //std::cout<< " --------  track->getChi2Prob()/2. +0.5 = " << track->getChi2Prob()/2. +0.5  <<std::endl;
-      return track->getChi2Prob()/2. +0.5; 
-         
-    }
-    else{
-         
-      //std::cout<< " --------  getChi2() = " << track->getChi2()  <<std::endl;
-      //std::cout<< " --------  1/( log( 7.3890561 + track->getChi2() ) ) = " << 1/( log( 7.3890561 + track->getChi2() ) ) <<std::endl;
-      return 1/( log( 7.3890561 + track->getChi2() ) ); //e^2 = 7.3890561
-         
-    }
+    if (track->getHits().size() > 2) {
+      // std::cout<< " --------  getChi2Prob() = " << track->getChi2Prob()  <<std::endl;
+      // std::cout<< " --------  track->getChi2Prob()/2. +0.5 = " << track->getChi2Prob()/2. +0.5  <<std::endl;
+      return track->getChi2Prob() / 2. + 0.5;
 
+    } else {
+      // std::cout<< " --------  getChi2() = " << track->getChi2()  <<std::endl;
+      // std::cout<< " --------  1/( log( 7.3890561 + track->getChi2() ) ) = " << 1/( log( 7.3890561 + track->getChi2()
+      // ) ) <<std::endl;
+      return 1 / (log(7.3890561 + track->getChi2())); // e^2 = 7.3890561
+    }
   }
-   
 };
-
-
 
 /** A functor to return the quality of a track.
  For tracks with 4 hits or more the chi2prob is mapped to* 0.5-1, with x = prob/2 + 0.5.
  Tracks with 3 hits get the chi2 mapped to 0-0.5 by 1/(ln( e^2 + chi2 );
  That gives 0 for an infinite chi2 and 0.5 for a chi2 of 0.
- 
+
  Reason: now 3-hit-tracks can be compared as well
  */
-class TrackQISpecial_MV{
-   
+class TrackQISpecial_MV {
 public:
-   
-   inline double operator()( ITrack* track ){ 
-      
-      if( track->getHits().size() > 3 ){
-         
-         return track->getChi2Prob()/2. +0.5; 
-         
-      }
-      else{
-         
-         return 1/( log( 7.3890561 + track->getChi2() ) ); //e^2 = 7.3890561
-         
-      }
-      
-   }
-   
-   
-};
+  inline double operator()(ITrack* track) {
+    if (track->getHits().size() > 3) {
+      return track->getChi2Prob() / 2. + 0.5;
 
+    } else {
+      return 1 / (log(7.3890561 + track->getChi2())); // e^2 = 7.3890561
+    }
+  }
+};
 
 #endif

@@ -1,80 +1,66 @@
 
 #include "TPCModularEndplate.h"
 
-#include <DD4hep/DD4hepUnits.h>
 #include "marlin/VerbosityLevels.h"
+#include <DD4hep/DD4hepUnits.h>
 
 #include <math.h>
 
+TPCModularEndplate::TPCModularEndplate(const dd4hep::rec::FixedPadSizeTPCData* tpc) : _tpc(tpc) {}
 
-TPCModularEndplate::TPCModularEndplate( const dd4hep::rec::FixedPadSizeTPCData* tpc ) : _tpc( tpc) { }
-
-
-void TPCModularEndplate::addModuleRing( unsigned nModules, double phi0 ){
-
-  if( isInitialized ){
-    throw std::runtime_error("TPCModularEndplate: addModuleRing() called after initialize() ") ; 
+void TPCModularEndplate::addModuleRing(unsigned nModules, double phi0) {
+  if (isInitialized) {
+    throw std::runtime_error("TPCModularEndplate: addModuleRing() called after initialize() ");
   }
-  
-  _moduleRings.push_back( { nModules, phi0, 0 , 0 , 0 } )  ;
+
+  _moduleRings.push_back({nModules, phi0, 0, 0, 0});
 }
 
+void TPCModularEndplate::initialize() {
+  unsigned nRing = _moduleRings.size();
 
-void TPCModularEndplate::initialize(){
+  double deltaR = (_tpc->rMaxReadout / dd4hep::mm - _tpc->rMinReadout / dd4hep::mm) / nRing;
 
-  unsigned nRing = _moduleRings.size() ;
+  double rMin = _tpc->rMinReadout / dd4hep::mm;
 
-  double deltaR = ( _tpc->rMaxReadout/dd4hep::mm  - _tpc->rMinReadout/dd4hep::mm ) /  nRing ;
+  double rMax = rMin + deltaR;
 
-  double rMin = _tpc->rMinReadout/dd4hep::mm ;
+  for (auto& modRing : _moduleRings) {
+    modRing.rMin = rMin;
+    modRing.rMax = rMax;
 
-  double rMax = rMin + deltaR ;
+    modRing.deltaPhi = 2. * M_PI / modRing.nModules;
 
-  for( auto& modRing : _moduleRings){
-
-    modRing.rMin = rMin ;
-    modRing.rMax = rMax ;
-
-    modRing.deltaPhi =  2. * M_PI / modRing.nModules ;  
-    
-    rMin += deltaR ;
-    rMax += deltaR ;
+    rMin += deltaR;
+    rMax += deltaR;
   }
 
-  isInitialized = true ; 
+  isInitialized = true;
 }
 
-
-
-double TPCModularEndplate::computeDistanceRPhi(const dd4hep::rec::Vector3D& hit){
-
-  if( !isInitialized ){
-    throw std::runtime_error("TPCModularEndplate: computeDistanceRPhi() called before initialize() ") ; 
-  }
-  
-  unsigned indexR = std::floor( _moduleRings.size() * ( hit.rho()  - _tpc->rMinReadout/dd4hep::mm )  / ( _tpc->rMaxReadout/dd4hep::mm  - _tpc->rMinReadout/dd4hep::mm )  ) ;
-
-  if( indexR > _moduleRings.size() -1 ){
-
-    streamlog_out( WARNING ) << " wrong index  : " << indexR << " for point " << hit << std::endl ;
-
-    return 1e6 ;
+double TPCModularEndplate::computeDistanceRPhi(const dd4hep::rec::Vector3D& hit) {
+  if (!isInitialized) {
+    throw std::runtime_error("TPCModularEndplate: computeDistanceRPhi() called before initialize() ");
   }
 
+  unsigned indexR = std::floor(_moduleRings.size() * (hit.rho() - _tpc->rMinReadout / dd4hep::mm) /
+                               (_tpc->rMaxReadout / dd4hep::mm - _tpc->rMinReadout / dd4hep::mm));
 
-  auto modRing = _moduleRings.at( indexR )  ;
+  if (indexR > _moduleRings.size() - 1) {
+    streamlog_out(WARNING) << " wrong index  : " << indexR << " for point " << hit << std::endl;
 
-  double phi = hit.phi() - modRing.phi0   ;
+    return 1e6;
+  }
 
-  double deltaPhi  = std::fabs( std::fmod(  phi , modRing.deltaPhi ) );
+  auto modRing = _moduleRings.at(indexR);
 
-  if( deltaPhi > modRing.deltaPhi/2. ) {
+  double phi = hit.phi() - modRing.phi0;
 
-    deltaPhi = modRing.deltaPhi - deltaPhi ;
-  }  
+  double deltaPhi = std::fabs(std::fmod(phi, modRing.deltaPhi));
 
-  return hit.rho() * deltaPhi ;
+  if (deltaPhi > modRing.deltaPhi / 2.) {
+    deltaPhi = modRing.deltaPhi - deltaPhi;
+  }
 
+  return hit.rho() * deltaPhi;
 }
-  
-  
