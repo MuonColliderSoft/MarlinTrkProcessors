@@ -1,3 +1,23 @@
+# v02-12-07
+
+* 2025-03-21 jmcarcell ([PR#73](https://github.com/iLCSoft/MarlinTrkProcessors/pull/73))
+  - Set the subdetectorHitNumbers in ClonesAndSplitTracksFinder that was not being set (defaulted to 0) when `mergeSplitTracks` is false.
+
+# v02-12-06
+
+* 2024-08-28 Victor Schwan ([PR#72](https://github.com/iLCSoft/MarlinTrkProcessors/pull/72))
+  - Remove the hardcoded (ILD) detector names from the FullLDC tracking to allow its usage with the `v11` model of ILD.
+    - Keep defaults compatible with the non-hybrid ILD models
+
+* 2024-08-23 tmadlener ([PR#70](https://github.com/iLCSoft/MarlinTrkProcessors/pull/70))
+  - Add the `.clang-format` default file that is also used by other Key4hep repositories
+  - Add a basic `pre-commit` configuration to run formatting checks
+  - Run `clang-format` to fix all formatting issues
+
+* 2024-08-22 tmadlener ([PR#71](https://github.com/iLCSoft/MarlinTrkProcessors/pull/71))
+  - Fix warnings to make Key4hep based CI workflows pass again
+  - Remove CentOS7 from Key4hep based workflows since it is no longer supported
+
 # v02-12-05
 
 * 2024-02-16 tmadlener ([PR#69](https://github.com/iLCSoft/MarlinTrkProcessors/pull/69))

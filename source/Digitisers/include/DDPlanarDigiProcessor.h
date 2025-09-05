@@ -5,32 +5,31 @@
 
 #include "lcio.h"
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
-#include <gsl/gsl_rng.h>
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
+#include <gsl/gsl_rng.h>
 
 #include <TH1F.h>
 
-using namespace lcio ;
-using namespace marlin ;
+using namespace lcio;
+using namespace marlin;
 
 namespace EVENT {
-  class SimTrackerHit;
+class SimTrackerHit;
 }
 
-
 /** ======= DDPlanarDigiProcessor ========== <br>
- * Creates TrackerHits from SimTrackerHits, smearing them according to the input parameters. 
+ * Creates TrackerHits from SimTrackerHits, smearing them according to the input parameters.
  * The positions of "digitized" TrackerHits are obtained by gaussian smearing positions
- * of SimTrackerHits perpendicular and along the ladder according to the specified point resolutions. 
+ * of SimTrackerHits perpendicular and along the ladder according to the specified point resolutions.
  * The geometry of the surface is retreived from DDRec::Surface associated to the hit via cellID.
- * 
- * 
- * <h4>Input collections and prerequisites</h4> 
+ *
+ *
+ * <h4>Input collections and prerequisites</h4>
  * Processor requires a collection of SimTrackerHits <br>
  * <h4>Output</h4>
  * Processor produces collection of smeared TrackerHits<br>
@@ -49,80 +48,67 @@ namespace EVENT {
  * @param Sub_Detector_ID ID of Sub-Detector using UTIL/ILDConf.h from lcio <br>
  * (default value lcio::ILDDetID::VXD) <br>
  * <br>
- * 
+ *
  * @author F.Gaede CERN/DESY, S. Aplin DESY
  * @date Dec 2014
  */
 class DDPlanarDigiProcessor : public Processor {
-  
 public:
-  
-  virtual Processor*  newProcessor() { return new DDPlanarDigiProcessor ; }
-  
-  
-  DDPlanarDigiProcessor() ;
+  virtual Processor* newProcessor() { return new DDPlanarDigiProcessor; }
+
+  DDPlanarDigiProcessor();
   DDPlanarDigiProcessor(const DDPlanarDigiProcessor&) = delete;
   DDPlanarDigiProcessor& operator=(const DDPlanarDigiProcessor&) = delete;
-  
+
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
-  
+  virtual void init();
+
   /** Called for every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  
+  virtual void processRunHeader(LCRunHeader* run);
+
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ; 
-  
-  
-  virtual void check( LCEvent * evt ) ; 
-  
-  
+  virtual void processEvent(LCEvent* evt);
+
+  virtual void check(LCEvent* evt);
+
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
-  
-  
+  virtual void end();
 
-  
 protected:
-  
-  std::string _inColName {};
-  
-  std::string _outColName {};
-  std::string _outRelColName {};
- 
-  std::string _subDetName {};
-  
-  int _nRun {};
-  int _nEvt {};
-  
-  FloatVec _resU {};
-  FloatVec _resV {};
-  FloatVec _resT {};
-  
+  std::string _inColName{};
+
+  std::string _outColName{};
+  std::string _outRelColName{};
+
+  std::string _subDetName{};
+
+  int _nRun{};
+  int _nEvt{};
+
+  FloatVec _resU{};
+  FloatVec _resV{};
+  FloatVec _resT{};
+
   bool _isStrip{};
-  
-  gsl_rng* _rng {nullptr};
-  
-  const dd4hep::rec::SurfaceMap* _map {nullptr};
 
-  bool _forceHitsOntoSurface {};
-  double _minEnergy {};
+  gsl_rng* _rng{nullptr};
 
-  bool _useTimeWindow {};
-  bool _correctTimesForPropagation {};
-  FloatVec _timeWindow_min {};
-  FloatVec _timeWindow_max {};
+  const dd4hep::rec::SurfaceMap* _map{nullptr};
 
-  std::vector<TH1F*> _h {};
-  
-} ;
+  bool _forceHitsOntoSurface{};
+  double _minEnergy{};
+
+  bool _useTimeWindow{};
+  bool _correctTimesForPropagation{};
+  FloatVec _timeWindow_min{};
+  FloatVec _timeWindow_max{};
+
+  std::vector<TH1F*> _h{};
+};
 
 #endif
-
-
-

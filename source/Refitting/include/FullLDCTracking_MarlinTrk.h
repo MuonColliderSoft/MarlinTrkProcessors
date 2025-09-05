@@ -1,54 +1,53 @@
 #ifndef FULLLDCTRACKING_H
 #define FULLLDCTRACKING_H 1
 
-#include "marlin/Processor.h"
-#include <marlin/Global.h>
-#include "lcio.h"
-#include <string>
 #include "ClusterExtended.h"
-#include "TrackExtended.h"
-#include "TrackerHitExtended.h"
-#include "TrackHitPair.h"
-#include "HelixClass.h"
 #include "ClusterShapes.h"
 #include "GroupTracks.h"
+#include "HelixClass.h"
+#include "TrackExtended.h"
+#include "TrackHitPair.h"
+#include "TrackerHitExtended.h"
+#include "lcio.h"
+#include "marlin/Processor.h"
 #include <map>
+#include <marlin/Global.h>
 #include <set>
+#include <string>
 
 #include "MarlinTrk/IMarlinTrack.h"
 
-#include <UTIL/BitField64.h>
 #include "UTIL/LCTrackerConf.h"
+#include <UTIL/BitField64.h>
 
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 namespace MarlinTrk {
-  class HelixFit;
-  class IMarlinTrkSystem ;
-}
+class HelixFit;
+class IMarlinTrkSystem;
+} // namespace MarlinTrk
 
-namespace dd4hep{
-    class Detector ;
+namespace dd4hep {
+class Detector;
 }
 
 /** === FullLDCTracking_MarlinTrk Processor === <br>
- * Processor performing track finding procedure in 
+ * Processor performing track finding procedure in
  * the entire LDC detector by linking track segments
  * found by the SiliconTracking module in the silicon detectors
- * and by the LEPTracking module in TPC. 
- * <h4>Input collections and prerequisites</h4> 
- * Processor requires collection of digitized vertex, sit, ftd, set, etd & tpc tracker hits 
+ * and by the LEPTracking module in TPC.
+ * <h4>Input collections and prerequisites</h4>
+ * Processor requires collection of digitized vertex, sit, ftd, set, etd & tpc tracker hits
  * and also the collections of tracks found in the silicon detectors
  * and in TPC.
  * <h4>Output</h4>
- * Processor produces an LCIO collection of the Tracks. Each track is characterised by 
+ * Processor produces an LCIO collection of the Tracks. Each track is characterised by
  * five parameters : Omega (signed curvuture), Tan(lambda) where
  * lambda is the dip angle, Phi (azimuthal angle @ point of closest approach), D0 (signed impact parameter),
- * Z0 (displacement along z axis at the point of closest approach to IP). 
+ * Z0 (displacement along z axis at the point of closest approach to IP).
  * Covariance matrix for these parameters is also provided.
- * Only lower left corner of the covariance matrix is stored. The sequence of the covariance matrix elements 
+ * Only lower left corner of the covariance matrix is stored. The sequence of the covariance matrix elements
  * assigned to track is the following: <br>
  * (D0,D0) <br>
  * (Phi,D0), (Phi,Phi) <br>
@@ -58,19 +57,19 @@ namespace dd4hep{
  * The number of hits in the different subdetectors associated
  * with each track can be accessed via method Track::getSubdetectorHitNumbers().
  * This method returns vector of integers : <br>
- * number of VTX hits used in the track fit is the 1st element in this vector  
+ * number of VTX hits used in the track fit is the 1st element in this vector
  * (Track::getSubdetectorHitNumbers()[0]) <br>
- * number of FTD hits used in the track fit is the 2nd element in this vector  
+ * number of FTD hits used in the track fit is the 2nd element in this vector
  * (Track::getSubdetectorHitNumbers()[1]) <br>
- * number of SIT hits used in the track fit is the 3d element in this vector  
+ * number of SIT hits used in the track fit is the 3d element in this vector
  * (Track::getSubdetectorHitNumbers()[2]) <br>
- * number of TPC hits used in the track fit is the 4th element in this vector  
+ * number of TPC hits used in the track fit is the 4th element in this vector
  * (Track::getSubdetectorHitNumbers()[3]) <br>
- * number of SET hits used in the track fit is the 5th element in this vector  
+ * number of SET hits used in the track fit is the 5th element in this vector
  * (Track::getSubdetectorHitNumbers()[4]) <br>
- * number of ETD hits used in the track fit is the 6th element in this vector  
+ * number of ETD hits used in the track fit is the 6th element in this vector
  * (Track::getSubdetectorHitNumbers()[5]) <br>
- * total number of VTX hits in track is the 7th element in this vector 
+ * total number of VTX hits in track is the 7th element in this vector
  * (Track::getSubdetectorHitNumbers()[6]) <br>
  * total number of FTD hits in track is the 8th element in this vector
  * (Track::getSubdetectorHitNumbers()[7]) <br>
@@ -82,7 +81,7 @@ namespace dd4hep{
  * (Track::getSubdetectorHitNumbers()[10]) <br>
  * total number of ETD hits in track is the 12th element in this vector
  * (Track::getSubdetectorHitNumbers()[11]) <br>
- * Output track collection has by default a name "LDCTracks". 
+ * Output track collection has by default a name "LDCTracks".
  * @param VTXHitCollection name of input VTX TrackerHit collection <br>
  * (default parameter value : "VTXTrackerHits") <br>
  * @param FTDPixelHitCollectionName name of input FTD Pixel TrackerHit collection <br>
@@ -104,15 +103,15 @@ namespace dd4hep{
  * @param SiTracks collection name of Si tracks <br>
  * (default parameter value : "SiTracks") <br>
  * @param SiTracksMCPRelColl Name of input Si track to MC particle relation collection <br>
- * (default parameter value : "SiTracksMCP") <br> 
+ * (default parameter value : "SiTracksMCP") <br>
  * @param LDCTrackCollection name of the output LDC track collection <br>
  * (default parameter value : "LDCTracks") <br>
  * @param Chi2FitCut cut on the Chi2/Ndf of the track fit <br>
  * (default parameter value : 100.0) <br>
- * @param Chi2PrefitCut cut on the prefit Chi2 of the track candidate, 
+ * @param Chi2PrefitCut cut on the prefit Chi2 of the track candidate,
  * prefit is done with the simple helix hypothesis <br>
  * (default parameter value : 1e+5) <br>
-  * @param AngleCutForMerging  cut on opening angle between 
+  * @param AngleCutForMerging  cut on opening angle between
  * particle momentum reconstructed with TPC and momentum reconstructed
  * with the Silicon detectors. If the opening angle is smaller that this cut
  * the track segment in Silicon trackers and in TPC are tested for their
@@ -122,7 +121,7 @@ namespace dd4hep{
  * parameter reconstructed with TPC and with Si detectors. If the relative difference is smaller
  * than this cut, the track segments in TPC and Si are tested for their compatibility <br>
  * (default parameter value : 0.25) <br>
- * @param D0CutForMerging Upper cutoff on the difference in D0 [mm] to allow for merging 
+ * @param D0CutForMerging Upper cutoff on the difference in D0 [mm] to allow for merging
  * of the Si and TPC segments <br>
  * (default parameter value : 500) <br>
  * @param Z0CutForMerging Upper cutoff on the difference in Z0 [mm] to allow for merging
@@ -132,16 +131,16 @@ namespace dd4hep{
  * if set to 1 debugging printout is activated
  * (default parameter value : 1) <br>
  * @param ForceSiTPCMerging This flag steers merging of Si and TPC track segments. If ForceMerging=1
- * Si and TPC track segments are forced to be merged if the opening angle between Si track 
+ * Si and TPC track segments are forced to be merged if the opening angle between Si track
  * momentum and TPC track momentum
- * is less than AngleCutForForcedMerging (see below) and difference in tracks 
+ * is less than AngleCutForForcedMerging (see below) and difference in tracks
  * parameters Omega is less than OmegaCutForForcedMerging (see below) <br>
  * (default parameter value : 0)
  * @param AngleCutForForcedMerging cut on opening angle between Si track momentum and
  * TPC track momentum. Used to steer forced merging of Si and TPC track segments. <br>
  * (default parameter value : 0.05)
  * @param OmegaCutForForcedMerging cut on the difference between Si and TPC tracks parameter
- * Omega. Used to steer forced merging of Si and TPC track segments. Relative 
+ * Omega. Used to steer forced merging of Si and TPC track segments. Relative
  * errors are compared. <br>
  * (default parameter value : 0.15) <br>
  * @param D0CutForForcedMerging Upper cutoff on the difference in D0 to allow for forced
@@ -150,7 +149,7 @@ namespace dd4hep{
  * @param Z0CutForForcedMerging Upper cutoff on the difference in Z0 to allow for forced
  * merging of the Si and TPC segments <br>
  * (default parameter value : 200) <br>
- * @param ForceTPCSegmentsMerging If this flag is set to 1, the code attempts to 
+ * @param ForceTPCSegmentsMerging If this flag is set to 1, the code attempts to
  * merge TPC segments from the low pt splitted loopers <br>
  * (default parameter value : 1) <br>
  * @param D0CutToMergeTPCSegments cut on the difference in the track parameter
@@ -158,35 +157,35 @@ namespace dd4hep{
  * (default parameter value : 100) <br>
  * @param Z0CutToMergeTPCSegments cut on the difference in the track parameter
  * z0 [mm] to allow for merging TPC segments <br>
- * (default parameter value : 5000) <br> 
+ * (default parameter value : 5000) <br>
  * @param DeltaPCutToMergeTPCSegments cut on the magnitude [GeV/c] of the vectorial difference
  * of the momentum vectors, associated with TPC segments, for the TPC segment's merging procedure <br>
  * (default parameter value : 0.1) <br>
  * @param PtCutToMergeTPCSegments lower cutoff on Pt of the TPC segments of the looping track for
  * the merging procedure.
  * If transverse momentum of the segments is less than cutoff the segments are allowed to be merged. <br>
- * (default parameter value : 1.2) <br> 
- * @param AssignTPCHits If this flag is set to 1, the code attempts to assign left-over 
+ * (default parameter value : 1.2) <br>
+ * @param AssignTPCHits If this flag is set to 1, the code attempts to assign left-over
  * TPC hits to the accepted track candidates. No track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
- * @param AssignETDHits If this flag is set to 1, the code attempts to assign  
+ * @param AssignETDHits If this flag is set to 1, the code attempts to assign
  * ETD hits to the accepted track candidates. No track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
- * @param AssignVTXHits If this flag is set to 1, the code attempts to assign left-over 
+ * @param AssignVTXHits If this flag is set to 1, the code attempts to assign left-over
  * VTX hits to the accepted track candidates. Track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
- * @param AssignFTDHits If this flag is set to 1, the code attempts to assign left-over 
+ * @param AssignFTDHits If this flag is set to 1, the code attempts to assign left-over
  * FTD hits to the accepted track candidates. Track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
- * @param AssignSITHits If this flag is set to 1, the code attempts to assign left-over 
+ * @param AssignSITHits If this flag is set to 1, the code attempts to assign left-over
  * SIT hits to the accepted track candidates. Track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
- * @param AssignSETHits If this flag is set to 1, the code attempts to assign  
+ * @param AssignSETHits If this flag is set to 1, the code attempts to assign
  * SET hits to the accepted track candidates. Track refit is done in case when hit is assigned
  * to the existing track <br>
  * (default parameter value : 1) <br>
@@ -211,49 +210,48 @@ namespace dd4hep{
  * @param NHitsExtrapolation Number of the last track hits for extrapolating helix
  * to the outer tracking detectors (SET, ETD) <br>
  * (default parameter value : 35) <br>
- * @param CutOnTPCHits minimal number of TPC hits, used in the track fit, which is 
+ * @param CutOnTPCHits minimal number of TPC hits, used in the track fit, which is
  * required for tracks which have no hits from the Si detectors <br>
- * (default parameter value : 35) <br> 
- * @param CutOnTrackD0 cut on the d0 parameter of the track. If the d0 parameter is greater that 
+ * (default parameter value : 35) <br>
+ * @param CutOnTrackD0 cut on the d0 parameter of the track. If the d0 parameter is greater that
  * this cut, track is rejected <br>
  * (default parameter value : 500) <br>
- * @param CutOnTrackZ0 cut on the z0 parameter of the track. If the z0 parameter is greater that 
+ * @param CutOnTrackZ0 cut on the z0 parameter of the track. If the z0 parameter is greater that
  * this cut, track is rejected <br>
  * (default parameter value : 500) <br>
- * @param ForbidOverlapInZTPC If this flag is set to 1 then merging of the TPC semiloops is 
+ * @param ForbidOverlapInZTPC If this flag is set to 1 then merging of the TPC semiloops is
  * forbiden for segment overlapping in z <br>
  * (default parameter value : 0) <br>
  * @param ForbidOverlapInZComb If this flag is set to 1 then merging of left-over TPC semiloop and
  * combined Si-TPC track is their segments overlap in z <br>
  * (default parameter value : 0) <br>
- * @param cosThetaCutHighPtMerge cut on cos theta between the two momentum vectors 
+ * @param cosThetaCutHighPtMerge cut on cos theta between the two momentum vectors
  * when considering merger of high Pt tracks <br>
  * (default is 0.99) <br>
- * @param cosThetaCutSoftHighPtMerge cut on the cos theta between the two momentum vectors 
+ * @param cosThetaCutSoftHighPtMerge cut on the cos theta between the two momentum vectors
  * when considering merger of high Pt tracks for softer dp/p cut <br>
  * (default is 0.998) <br>
- * @param momDiffCutHighPtMerge cut on dp/p 
+ * @param momDiffCutHighPtMerge cut on dp/p
  * when considering merger of high Pt tracks <br>
  * (default is 0.01 [1/GeV]) <br>
- * @param momDiffCutSoftHighPtMerge softer cut on dp/p  
+ * @param momDiffCutSoftHighPtMerge softer cut on dp/p
  * when considering merger of high Pt tracks <br>
  * (default is 0.25 [1/GeV]) <br>
- * @param hitDistanceCutHighPtMerge cut on 3D distance between hit 
+ * @param hitDistanceCutHighPtMerge cut on 3D distance between hit
  * and helix extrapolation when considering merger of high Pt tracks <br>
  * (default is 25.0 [mm]) <br>
- * @param maxHitDistanceCutHighPtMerge cut for max 3D distance between any hit 
+ * @param maxHitDistanceCutHighPtMerge cut for max 3D distance between any hit
  * and helix extrapolation when considering merger of high Pt tracks <br>
  * (default is 50.0 [mm]) <br>
- * @param maxFractionOfOutliersCutHighPtMerge cut on maximum fraction of outliers 
+ * @param maxFractionOfOutliersCutHighPtMerge cut on maximum fraction of outliers
  * when considering merger of high Pt tracks <br>
  * (default is 0.95 ) <br>
- 
- 
+
+
  * @author A. Raspereza (MPI Munich)<br>
  */
 
 class FullLDCTracking_MarlinTrk : public Processor {
-  
 public:
   virtual Processor* newProcessor() { return new FullLDCTracking_MarlinTrk; }
   FullLDCTracking_MarlinTrk();
@@ -266,55 +264,49 @@ public:
   virtual void end();
 
 protected:
-  
-  void prepareVectors( LCEvent * evt );
+  void prepareVectors(LCEvent* evt);
   void CleanUp();
   void MergeTPCandSiTracks();
   void MergeTPCandSiTracksII();
 
-  TrackExtended * CombineTracks(TrackExtended * tpcTrk, TrackExtended * siTrk, float maxAllowedOutliers ,bool testCombinationOnly );
+  TrackExtended* CombineTracks(TrackExtended* tpcTrk, TrackExtended* siTrk, float maxAllowedOutliers,
+                               bool testCombinationOnly);
 
-//  TrackExtended * TrialCombineTracks(TrackExtended * tpcTrk, TrackExtended * siTrk);
+  //  TrackExtended * TrialCombineTracks(TrackExtended * tpcTrk, TrackExtended * siTrk);
 
-  void Sorting(TrackExtendedVec & trackVec);
+  void Sorting(TrackExtendedVec& trackVec);
   void SelectCombinedTracks();
   void AddNotCombinedTracks();
   void CheckTracks();
   void AddNotAssignedHits();
   void RemoveSplitTracks();
-  void AddTrackColToEvt(LCEvent * evt, TrackExtendedVec & trkVec, 
-                        std::string TrkColName);
-  float CompareTrk(TrackExtended * first, TrackExtended * second, 
-                   float d0Cut, float z0Cut, int iopt);
-  
-  float CompareTrkII(TrackExtended * first, TrackExtended * second, 
-                     float d0Cut, float z0Cut, int iopt, float &Angle);
-  float CompareTrkIII(TrackExtended * first, TrackExtended * second, 
-                      float d0Cut, float z0Cut, int iopt, float &Angle);
-  
-  void SortingTrackHitPairs(TrackHitPairVec & trackHitPairVec);
-  
-  void AssignSiHitsToTracks(TrackerHitExtendedVec hitVec,
-                            float dcut);
-  
-  void AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec,
-                             float dcut);
-  
+  void AddTrackColToEvt(LCEvent* evt, TrackExtendedVec& trkVec, std::string TrkColName);
+  float CompareTrk(TrackExtended* first, TrackExtended* second, float d0Cut, float z0Cut, int iopt);
+
+  float CompareTrkII(TrackExtended* first, TrackExtended* second, float d0Cut, float z0Cut, int iopt, float& Angle);
+  float CompareTrkIII(TrackExtended* first, TrackExtended* second, float d0Cut, float z0Cut, int iopt, float& Angle);
+
+  void SortingTrackHitPairs(TrackHitPairVec& trackHitPairVec);
+
+  void AssignSiHitsToTracks(TrackerHitExtendedVec hitVec, float dcut);
+
+  void AssignTPCHitsToTracks(TrackerHitExtendedVec hitVec, float dcut);
+
   void AssignOuterHitsToTracks(TrackerHitExtendedVec hitVec, float dcut, int refit);
-  
+
   void CreateExtrapolations();
-  
+
   void CleanUpExtrapolations();
-  
-  HelixClass * GetExtrapolationHelix(TrackExtended * track);
-  
-  void PrintOutMerging(TrackExtended * firstTrackExt, TrackExtended * secondTrackExt, 
-                       int iopt);
-  
-  void GeneralSorting(int * index, float * val, int direct, int nVal);
-  
+
+  HelixClass* GetExtrapolationHelix(TrackExtended* track);
+
+  void PrintOutMerging(TrackExtended* firstTrackExt, TrackExtended* secondTrackExt, int iopt);
+
+  void GeneralSorting(int* index, float* val, int direct, int nVal);
+
   int SegmentRadialOverlap(TrackExtended* pTracki, TrackExtended* pTrackj);
   bool VetoMerge(TrackExtended* firstTrackExt, TrackExtended* secondTrackExt);
+<<<<<<< HEAD
 
   int _nRun{};
   int _nEvt{};
@@ -452,10 +444,27 @@ protected:
     _encoder->setValue(hit->getCellID0());
     return (*_encoder)[lcio::LCTrackerCellID::sensor()];
   };
+=======
 
-  
-  void setupGeom(const dd4hep::Detector& lcdd) ;
+  int _nRun{};
+  int _nEvt{};
 
+  MarlinTrk::HelixFit* _fastfitter{nullptr};
+
+  /** pointer to the IMarlinTrkSystem instance
+   */
+  MarlinTrk::IMarlinTrkSystem* _trksystem{nullptr};
+  std::string _trkSystemName{};
+
+  bool _MSOn{}, _ElossOn{}, _SmoothOn{};
+>>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
+
+  std::string _TPCTrackCollection{};
+  std::string _SiTrackCollection{};
+  std::string _TPCTrackMCPCollName{};
+  std::string _SiTrackMCPCollName{};
+
+<<<<<<< HEAD
   double _tpc_inner_r{};
   double _tpc_outer_r{};
   double _tpc_pad_height{};
@@ -541,8 +550,218 @@ protected:
   bool  _petalBasedFTDWithOverlaps{};
   
 } ;
+=======
+  std::string _VTXTrackerHitCollection{};
+  std::string _SITTrackerHitCollection{};
+  std::string _SETTrackerHitCollection{};
+  std::string _FTDPixelHitCollection{};
+  std::string _FTDSpacePointCollection{};
+  std::string _TPCTrackerHitCollection{};
+  std::string _ETDTrackerHitCollection{};
+
+  std::string _LDCTrackCollection{};
+
+  std::string m_vtxDetName{};
+  std::string m_forwardTrackerDetName{};
+  std::string m_innerBarrelTrackerDetName{};
+  std::string m_vertexEndcapDetName{};
+  std::string m_siliconExternalTrackerDetName{};
+
+  TrackExtendedVec _allSiTracks{};
+  TrackExtendedVec _allTPCTracks{};
+  TrackExtendedVec _allCombinedTracks{};
+  TrackExtendedVec _allNonCombinedTPCTracks{};
+  TrackExtendedVec _allNonCombinedSiTracks{};
+  TrackExtendedVec _trkImplVec{};
+  TrackerHitExtendedVec _allTPCHits{};
+  TrackerHitExtendedVec _allVTXHits{};
+  TrackerHitExtendedVec _allFTDHits{};
+  TrackerHitExtendedVec _allSITHits{};
+  TrackerHitExtendedVec _allSETHits{};
+  TrackerHitExtendedVec _allETDHits{};
+
+  float PI{}, PIOVER2{}, TWOPI{};
+
+  float _bField{};
+  float _chi2PrefitCut{};
+  float _chi2FitCut{};
+
+  int _debug{};
+
+  float _dPCutForMerging{};
+  float _d0CutForMerging{};
+  float _z0CutForMerging{};
+  float _dOmegaForMerging{};
+  float _angleForMerging{};
+
+  int _forceMerging{};
+  float _dPCutForForcedMerging{};
+  float _d0CutForForcedMerging{};
+  float _z0CutForForcedMerging{};
+  float _dOmegaForForcedMerging{};
+  float _angleForForcedMerging{};
+
+  int _mergeTPCSegments{};
+  float _dPCutToMergeTPC{};
+  float _PtCutToMergeTPC{};
+  float _d0CutToMergeTPC{};
+  float _z0CutToMergeTPC{};
+
+  float _cosThetaCutHighPtMerge{};
+  float _cosThetaCutSoftHighPtMerge{};
+  float _momDiffCutHighPtMerge{};
+  float _momDiffCutSoftHighPtMerge{};
+  float _hitDistanceCutHighPtMerge{};
+  float _maxHitDistanceCutHighPtMerge{};
+  float _maxFractionOfOutliersCutHighPtMerge{};
+
+  float _vetoMergeMomentumCut{};
+
+  float _initialTrackError_d0{};
+  float _initialTrackError_phi0{};
+  float _initialTrackError_omega{};
+  float _initialTrackError_z0{};
+  float _initialTrackError_tanL{};
+
+  double _maxChi2PerHit{};
+  double _minChi2ProbForSiliconTracks{};
+  float _maxAllowedPercentageOfOutliersForTrackCombination{};
+  int _maxAllowedSiHitRejectionsForTrackCombination{};
+
+  bool _runMarlinTrkDiagnostics{};
+  std::string _MarlinTrkDiagnosticsName{};
+
+  int _nHitsExtrapolation{};
+
+  int _cutOnTPCHits{};
+  int _cutOnSiHits{};
+
+  int _assignVTXHits{}, _assignFTDHits{}, _assignSITHits{}, _assignTPCHits{};
+
+  int _assignSETHits{}, _assignETDHits{};
+
+  float _distCutForVTXHits{}, _distCutForFTDHits{}, _distCutForSITHits{}, _distCutForTPCHits{};
+
+  float _distCutForSETHits{}, _distCutForETDHits{};
+
+  float _d0TrkCut{}, _z0TrkCut{};
+
+  int _forbidOverlapInZTPC{}, _forbidOverlapInZComb{};
+
+  float _energyLossErrorTPC{};
+
+  LCEvent* _evt{nullptr};
+
+  std::map<TrackExtended*, HelixClass*> _trackExtrapolatedHelix{};
+  std::set<TrackExtended*> _candidateCombinedTracks{};
+
+  UTIL::BitField64* _encoder{nullptr};
+  int getDetectorID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::subdet()];
+  }
+  int getSideID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::side()];
+  };
+  int getLayerID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::layer()];
+  };
+  int getModuleID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::module()];
+  };
+  int getSensorID(TrackerHit* hit) {
+    _encoder->setValue(hit->getCellID0());
+    return (*_encoder)[lcio::LCTrackerCellID::sensor()];
+  };
+
+  void setupGeom(const dd4hep::Detector& lcdd);
+
+  double _tpc_inner_r{};
+  double _tpc_outer_r{};
+  double _tpc_pad_height{};
+  int _tpc_nrows{};
+
+  //  struct VXD_Layer {
+  //    int nLadders;
+  //    double phi0;
+  //    double dphi;
+  //    double senRMin;
+  //    double supRMin;
+  //    double length;
+  //    double width;
+  //    double offset;
+  //    double senThickness;
+  //    double supThickness;
+  //  };
+  //  std::vector<VXD_Layer> _VXDgeo;
+
+  unsigned int _nLayersVTX{};
+
+  //  struct SIT_Layer {
+  //    int nLadders;
+  //    double phi0;
+  //    double dphi;
+  //    double senRMin;
+  //    double supRMin;
+  //    double length;
+  //    double width;
+  //    double offset;
+  //    double senThickness;
+  //    double supThickness;
+  //  };
+  //  std::vector<SIT_Layer> _SITgeo;
+
+  unsigned int _nLayersSIT{};
+
+  unsigned int _nLayersSET{};
+
+  //  struct FTD_Disk {
+  //    int nPetals;
+  //    double phi0;
+  //    double dphi;
+  //
+  //    double alpha;
+  //    double rInner;
+  //    double height;
+  //    double innerBaseLength;
+  //    double outerBaseLength;
+  //    double senThickness;
+  //    double supThickness;
+  //
+  //    double senZPos_even_petal1;
+  //    double senZPos_even_petal2;
+  //    double senZPos_even_petal3;
+  //    double senZPos_even_petal4;
+  //
+  //    double supZPos_even_petal1;
+  //    double supZPos_even_petal2;
+  //    double supZPos_even_petal3;
+  //    double supZPos_even_petal4;
+  //
+  //    double senZPos_odd_petal1;
+  //    double senZPos_odd_petal2;
+  //    double senZPos_odd_petal3;
+  //    double senZPos_odd_petal4;
+  //
+  //    double supZPos_odd_petal1;
+  //    double supZPos_odd_petal2;
+  //    double supZPos_odd_petal3;
+  //    double supZPos_odd_petal4;
+  //
+  //
+  //
+  //  };
+  //
+  //  std::vector<FTD_Disk> _FTDgeo;
+  std::vector<float> _zLayerFTD{};
+
+  unsigned int _nLayersFTD{};
+  int _nPhiFTD{};
+  bool _petalBasedFTDWithOverlaps{};
+};
+>>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
 #endif
-
-
-
