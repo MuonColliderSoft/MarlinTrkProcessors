@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <set>
+#include <iomanip>
 
 #include <EVENT/MCParticle.h>
 
@@ -366,19 +367,44 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
                 << " withMC=" << mc << " nullMC=" << nullmc << std::endl;
 
 
-      LCRelation* rel = dynamic_cast<LCRelation*>(inputHitRels[icol]->getElementAt(ihit));
+      //LCRelation* rel = dynamic_cast<LCRelation*>(inputHitRels[icol]->getElementAt(ihit));
+      //SimTrackerHit* simhit = dynamic_cast<SimTrackerHit*>(rel->getTo());
 
-      auto* fromObj = rel ? rel->getFrom() : nullptr;
-      auto* toObj   = rel ? rel->getTo()   : nullptr;
+      std::vector<LCObject*> cands = nav.getRelatedToObjects(hit);
+      std::vector<float> wts = nav.getRelatedToWeights(hit);
 
-      std::cout << "[align] hits[" << ihit << "]@" << (void*)hit
-                << "  rel[" << ihit << "] from@" << (void*)fromObj
-                << "  to@" << (void*)toObj
-                << "  from==hit? " << (fromObj==hit) << std::endl; 
+      SimTrackerHit* simhit = nullptr;
+      float bestW = -1.0f;
+      bool bestHasMC = false;
       
-      SimTrackerHit* simhit = dynamic_cast<SimTrackerHit*>(rel->getTo());
+      for (size_t k = 0; k < cands.size(); ++k) {
+        auto* s = dynamic_cast<SimTrackerHit*>(cands[k]);
+        if (!s) continue;
+        const bool hasMC = (s->getMCParticle() != nullptr);
+        const float w = wts[k];
 
-      SimTrackerHitImpl* simhit_new = new SimTrackerHitImpl();
+        if (hasMC && (!bestHasMC || w > bestW)) { simhit = s; bestW = w; bestHasMC = true; }
+        else if (!bestHasMC && w > bestW) { simhit = s; bestW = w; }
+      }
+
+      if (!simhit) {
+        std::cout << "FAILSAFE: no SimTrackerHit" << std::endl;
+        continue;
+      }
+
+      auto* simhit_new = new SimTrackerHitImpl();
+
+      // auto* fromObj = rel ? rel->getFrom() : nullptr;
+      // auto* toObj   = rel ? rel->getTo()   : nullptr;
+
+      // std::cout << "[align] hits[" << ihit << "]@" << (void*)hit
+      //           << "  rel[" << ihit << "] from@" << (void*)fromObj
+      //           << "  to@" << (void*)toObj
+      //           << "  from==hit? " << (fromObj==hit) << std::endl; 
+      
+      // SimTrackerHit* simhit = dynamic_cast<SimTrackerHit*>(rel->getTo());
+
+      // SimTrackerHitImpl* simhit_new = new SimTrackerHitImpl();
 
       simhit_new->setCellID0(simhit->getCellID0());
       simhit_new->setCellID1(simhit->getCellID1());
@@ -395,11 +421,13 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       outputTrackerSimHitColls[icol]->addElement( simhit_new );
 
       
-      LCRelationImpl* rel_new = new LCRelationImpl();
+      // LCRelationImpl* rel_new = new LCRelationImpl();
+      auto* rel_new = new LCRelationImpl(hit_new, simhit_new, bestW);
+      outputTrackerHitRels[icol]->addElement(rel_new);
       
-      rel_new->setFrom(hit_new);
-      rel_new->setTo(simhit_new);
-      rel_new->setWeight(rel->getWeight());
+      // rel_new->setFrom(hit_new);
+      // rel_new->setTo(simhit_new);
+      // rel_new->setWeight(rel->getWeight());
 
       auto* mcp_sim = simhit->getMCParticle();
       const float* p_sim = simhit->getMomentum();
@@ -414,7 +442,7 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       std::cout << "[SIM HIT]: momentum: [" << p_sim[0] << ", " << p_sim[1] << ", " << p_sim[2] << "]\n";
       std::cout << "[SIM HIT]: time: " << sim_time << std::endl;
       
-      outputTrackerHitRels[icol]->addElement( rel_new );
+      // outputTrackerHitRels[icol]->addElement( rel_new );
 
     } // ihit loop
 
