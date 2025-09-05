@@ -293,19 +293,6 @@ class Detector;
 
 class FPCCDFullLDCTracking_MarlinTrk : public Processor {
 public:
-<<<<<<< HEAD
-  
-  virtual Processor*  newProcessor() { return new FPCCDFullLDCTracking_MarlinTrk ; }  
-  FPCCDFullLDCTracking_MarlinTrk() ;
-  FPCCDFullLDCTracking_MarlinTrk(const FPCCDFullLDCTracking_MarlinTrk&) = delete ;
-  FPCCDFullLDCTracking_MarlinTrk& operator=(const FPCCDFullLDCTracking_MarlinTrk&) = delete ;
-  virtual void init() ;
-  virtual void processRunHeader( LCRunHeader* run ) ;
-  virtual void processEvent( LCEvent * evt ) ; 
-  virtual void check( LCEvent * evt ) ; 
-  virtual void end() ;
-  
-=======
   virtual Processor* newProcessor() { return new FPCCDFullLDCTracking_MarlinTrk; }
   FPCCDFullLDCTracking_MarlinTrk();
   FPCCDFullLDCTracking_MarlinTrk(const FPCCDFullLDCTracking_MarlinTrk&) = delete;
@@ -316,7 +303,6 @@ public:
   virtual void check(LCEvent* evt);
   virtual void end();
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 protected:
   void prepareVectors(LCEvent* evt);
   void CleanUp();
@@ -360,135 +346,6 @@ protected:
 
   int SegmentRadialOverlap(TrackExtended* pTracki, TrackExtended* pTrackj);
   bool VetoMerge(TrackExtended* firstTrackExt, TrackExtended* secondTrackExt);
-<<<<<<< HEAD
-  
-  
-  int _nRun {};
-  int _nEvt {};
-  
-  MarlinTrk::HelixFit* _fastfitter{nullptr};
-  
-  /** pointer to the IMarlinTrkSystem instance 
-   */
-  MarlinTrk::IMarlinTrkSystem* _trksystem {nullptr};
-  
-  bool _MSOn{}, _ElossOn{}, _SmoothOn {};
-  
-  std::string _TPCTrackCollection{};
-  std::string _SiTrackCollection{};
-  std::string _TPCTrackMCPCollName{};
-  std::string _SiTrackMCPCollName{};
-  
-  std::string _VTXTrackerHitCollection{};
-  std::string _SITTrackerHitCollection{};
-  std::string _SETTrackerHitCollection{};
-  std::string _FTDPixelHitCollection{};
-  std::string _FTDSpacePointCollection{};
-  std::string _TPCTrackerHitCollection{};
-  std::string _ETDTrackerHitCollection{};
-  
-  std::string _LDCTrackCollection{};
-  
-  
-  TrackExtendedVec _allSiTracks{};
-  TrackExtendedVec _allTPCTracks{};
-  TrackExtendedVec _allCombinedTracks{};
-  TrackExtendedVec _allNonCombinedTPCTracks{};
-  TrackExtendedVec _allNonCombinedSiTracks{};
-  TrackExtendedVec _trkImplVec{};
-  TrackerHitExtendedVec _allTPCHits{};
-  TrackerHitExtendedVec _allVTXHits{};
-  TrackerHitExtendedVec _allFTDHits{};
-  TrackerHitExtendedVec _allSITHits{};
-  TrackerHitExtendedVec _allSETHits{};
-  TrackerHitExtendedVec _allETDHits{};
-  
-  float PI{}, PIOVER2{}, TWOPI{};
-  
-  float _bField{};
-  float _chi2PrefitCut{};
-  float _chi2FitCut{};
-  
-  int _debug{};
-  
-  float _dPCutForMerging{};
-  float _d0CutForMerging{};
-  float _z0CutForMerging{};
-  float _dOmegaForMerging{};
-  float _angleForMerging{};
-  
-  
-  int   _forceMerging{};
-  float _dPCutForForcedMerging{};
-  float _d0CutForForcedMerging{};
-  float _z0CutForForcedMerging{};
-  float _dOmegaForForcedMerging{};
-  float _angleForForcedMerging{};
-  
-  
-  int _mergeTPCSegments{};
-  float _dPCutToMergeTPC{};
-  float _PtCutToMergeTPC{};
-  float _d0CutToMergeTPC{};
-  float _z0CutToMergeTPC{};
-  
-  float _cosThetaCutHighPtMerge{};
-  float _cosThetaCutSoftHighPtMerge{};
-  float _momDiffCutHighPtMerge{};
-  float _momDiffCutSoftHighPtMerge{};
-  float _hitDistanceCutHighPtMerge{};
-  float _maxHitDistanceCutHighPtMerge{};
-  float _maxFractionOfOutliersCutHighPtMerge{};
-  
-  float _vetoMergeMomentumCut{};
-  
-  float _initialTrackError_d0{};
-  float _initialTrackError_phi0{};
-  float _initialTrackError_omega{};
-  float _initialTrackError_z0{};
-  float _initialTrackError_tanL{};
-  
-  double _maxChi2PerHit{};
-  double _minChi2ProbForSiliconTracks{};
-  double _maxChi2ForSiliconTracks{};
-  bool   _useMaxChi2ReqForSiTrk{};
-  float  _maxAllowedPercentageOfOutliersForTrackCombination{};
-  int    _maxAllowedSiHitRejectionsForTrackCombination{};
-  
-  bool _runMarlinTrkDiagnostics{};
-  std::string _MarlinTrkDiagnosticsName{};
-  
-  int _nHitsExtrapolation{};
-  
-  int _cutOnTPCHits{};
-  int _cutOnSiHits{};
-  
-  
-  int _assignVTXHits{},_assignFTDHits{},_assignSITHits{},_assignTPCHits{};
-  
-  int _assignSETHits{}, _assignETDHits{};
-  
-  float _distCutForVTXHits{},_distCutForFTDHits{},_distCutForSITHits{},_distCutForTPCHits{};
-  
-  float _distCutForSETHits{}, _distCutForETDHits{};
-  
-  
-  float _d0TrkCut{},_z0TrkCut{};
-  
-  int _forbidOverlapInZTPC{},_forbidOverlapInZComb{};
-  
-  LCEvent * _evt{nullptr};
-  
-  std::map<TrackExtended*,HelixClass*> _trackExtrapolatedHelix{};
-  std::set<TrackExtended*> _candidateCombinedTracks{};
-  
-  UTIL::BitField64* _encoder{nullptr};
-  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
-  int getSideID(TrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
-  int getLayerID(TrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
-  int getModuleID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::module()]; };
-  int getSensorID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::sensor()]; };
-=======
 
   int _nRun{};
   int _nEvt{};
@@ -498,98 +355,9 @@ protected:
   /** pointer to the IMarlinTrkSystem instance
    */
   MarlinTrk::IMarlinTrkSystem* _trksystem{nullptr};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   bool _MSOn{}, _ElossOn{}, _SmoothOn{};
 
-<<<<<<< HEAD
-  
-  void setupGeom(const dd4hep::Detector& theDetector) ;
-  
-  double _tpc_inner_r{};
-  double _tpc_outer_r{};
-  double _tpc_pad_height{};
-  int    _tpc_nrows{};
-  
-//  struct VXD_Layer {
-//    int nLadders;
-//    double phi0;
-//    double dphi;
-//    double senRMin;
-//    double supRMin;
-//    double length;
-//    double width;
-//    double offset;
-//    double senThickness;
-//    double supThickness;
-//  };
-//  std::vector<VXD_Layer> _VXDgeo;
-  
-  unsigned int _nLayersVTX{};
-  
-//  struct SIT_Layer {
-//    int nLadders;
-//    double phi0;
-//    double dphi;
-//    double senRMin;
-//    double supRMin;
-//    double length;
-//    double width;
-//    double offset;
-//    double senThickness;
-//    double supThickness;
-//  };
-//  std::vector<SIT_Layer> _SITgeo;
-  
-  unsigned int _nLayersSIT{};
-  
-  unsigned int _nLayersSET{};
-
-  
-//  struct FTD_Disk {
-//    int nPetals;
-//    double phi0;
-//    double dphi;
-//    
-//    double alpha;
-//    double rInner;
-//    double height;
-//    double innerBaseLength;
-//    double outerBaseLength;
-//    double senThickness;
-//    double supThickness;
-//    
-//    double senZPos_even_petal1;
-//    double senZPos_even_petal2;
-//    double senZPos_even_petal3;
-//    double senZPos_even_petal4;
-//    
-//    double supZPos_even_petal1;
-//    double supZPos_even_petal2;
-//    double supZPos_even_petal3;
-//    double supZPos_even_petal4;
-//    
-//    double senZPos_odd_petal1;
-//    double senZPos_odd_petal2;
-//    double senZPos_odd_petal3;
-//    double senZPos_odd_petal4;
-//    
-//    double supZPos_odd_petal1;
-//    double supZPos_odd_petal2;
-//    double supZPos_odd_petal3;
-//    double supZPos_odd_petal4;
-//    
-//    
-//    
-//  };
-//  
-//  std::vector<FTD_Disk> _FTDgeo;
-  std::vector<float> _zLayerFTD{};
-  
-  unsigned int _nLayersFTD{};
-  int _nPhiFTD{};
-  bool  _petalBasedFTDWithOverlaps{};
-=======
   std::string _TPCTrackCollection{};
   std::string _SiTrackCollection{};
   std::string _TPCTrackMCPCollName{};
@@ -602,7 +370,6 @@ protected:
   std::string _FTDSpacePointCollection{};
   std::string _TPCTrackerHitCollection{};
   std::string _ETDTrackerHitCollection{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   std::string _LDCTrackCollection{};
 
@@ -640,46 +407,6 @@ protected:
   float _dOmegaForForcedMerging{};
   float _angleForForcedMerging{};
 
-<<<<<<< HEAD
-/////////////Addition by Mori//////////////////
-  
-  GetPurityUtil* _purityUtil{nullptr};
-  moriUTIL* _moriUtil{nullptr};
-  MCPMap _mcpMapSi{};
-  MCPMap _mcpMapFull{};
-  IntVec getNHitsInSubDet(SimTrackerHitVec simvec);
-  std::vector<LCRelationNavigator*> _naviVecSi{};
-  std::vector<LCRelationNavigator*> _naviVecFull{};
-  std::string _colNameVXDTrackerHitRelations{};
-  std::string _colNameSITSpacePointRelations{};
-  std::string _colNameFTDSpacePointRelations{};
-  std::string _colNameFTDPixelTrackerHitRelations{};
-  std::string _colNameTPCTrackerHitRelations{};
-  std::string _colNameSETSpacePointRelations{};
-  LCRelationNavigator* _navVXD{nullptr};
-  LCRelationNavigator* _navSIT{nullptr};
-  LCRelationNavigator* _navFTDsp{nullptr};
-  LCRelationNavigator* _navFTDpix{nullptr};
-  LCRelationNavigator* _navTPC{nullptr};
-  LCRelationNavigator* _navSET{nullptr};
-  std::string _colNameVXDSimHit{};
-  std::string _colNameSITSimHit{};
-  std::string _colNameFTDspSimHit{};
-  std::string _colNameFTDpixSimHit{};
-  std::string _colNameTPCSimHit{};
-  std::string _colNameSETSimHit{};
-  LCCollection* _simVXD{nullptr};
-  LCCollection* _simSIT{nullptr};
-  LCCollection* _simFTDsp{nullptr};
-  LCCollection* _simFTDpix{nullptr};
-  LCCollection* _simTPC{nullptr};
-  LCCollection* _simSET{nullptr};
-
-  bool _mydebug{};
-  bool _mydebugPrintMCP{};
-
-  bool _FinalTrackCut_strategyA{};
-=======
   int _mergeTPCSegments{};
   float _dPCutToMergeTPC{};
   float _PtCutToMergeTPC{};
@@ -695,7 +422,6 @@ protected:
   float _maxFractionOfOutliersCutHighPtMerge{};
 
   float _vetoMergeMomentumCut{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   float _initialTrackError_d0{};
   float _initialTrackError_phi0{};
@@ -703,23 +429,12 @@ protected:
   float _initialTrackError_z0{};
   float _initialTrackError_tanL{};
 
-<<<<<<< HEAD
-  MCPMap LoadMCPMap(int mode);
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXD{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXDFTD{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXDSIT{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXDFTDSIT{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpFTD{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpFTDSIT{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpSIT{};
-=======
   double _maxChi2PerHit{};
   double _minChi2ProbForSiliconTracks{};
   double _maxChi2ForSiliconTracks{};
   bool _useMaxChi2ReqForSiTrk{};
   float _maxAllowedPercentageOfOutliersForTrackCombination{};
   int _maxAllowedSiHitRejectionsForTrackCombination{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   bool _runMarlinTrkDiagnostics{};
   std::string _MarlinTrkDiagnosticsName{};

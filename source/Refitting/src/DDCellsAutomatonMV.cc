@@ -432,19 +432,8 @@ void DDCellsAutomatonMV::processEvent(LCEvent* evt) {
       } else {
         streamlog_out(DEBUG2) << "Keeping track because of good helix fit: chi2/ndf = " << chi2OverNdf << "\n";
       }
-<<<<<<< HEAD
-      else {
-	streamlog_out( DEBUG2 ) << "Keeping track because of good helix fit: chi2/ndf = " << chi2OverNdf << "\n";
-      }
-    }
-    catch( VXDHelixFitterException& e ){
-      
-      
-      streamlog_out( DEBUG2 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
-=======
     } catch (VXDHelixFitterException& e) {
       streamlog_out(DEBUG2) << "Track rejected, because fit failed: " << e.what() << "\n";
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
       delete trackCand;
       continue;
     }
@@ -481,25 +470,8 @@ void DDCellsAutomatonMV::processEvent(LCEvent* evt) {
         continue;
       }
 
-<<<<<<< HEAD
-	// debug
-	//streamlog_out(DEBUG4) << " Kalman fitting: deleting track " << trackCand << std::endl ;
-
-	delete trackCand;
-        
-	continue;
-        
-      }
-      
-      
-    }
-    catch( FitterException& e ){
-      
-      streamlog_out( DEBUG4 ) << "Track rejected, because fit failed: " <<  e.what() << "\n";
-=======
     } catch (FitterException& e) {
       streamlog_out(DEBUG4) << "Track rejected, because fit failed: " << e.what() << "\n";
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
       delete trackCand;
       continue;
     }
@@ -590,16 +562,6 @@ void DDCellsAutomatonMV::processEvent(LCEvent* evt) {
 
         // Applying a x2/ndf cut on final tracks
 
-<<<<<<< HEAD
-	  }
-	}
-	
-	catch( FitterException& e ){
-	  
-	  streamlog_out( DEBUG4 ) << "DDCellsAutomatonMV: track couldn't be finalized due to fitter error: " << e.what() << "\n";
-	  delete trackImpl;
-	}
-=======
         if (((1.0 * trackImpl->getChi2()) / (1.0 * trackImpl->getNdf())) < 10.0) {
           trackVec->addElement(trackImpl);
 
@@ -612,7 +574,6 @@ void DDCellsAutomatonMV::processEvent(LCEvent* evt) {
                               << "\n";
         delete trackImpl;
       }
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
     }
   }
   // Finalisation ends

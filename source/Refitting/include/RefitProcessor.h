@@ -35,22 +35,12 @@ class IMarlinTrkSystem;
 
 class RefitProcessor : public marlin::Processor {
 public:
-<<<<<<< HEAD
-  
-  virtual marlin::Processor*  newProcessor() { return new RefitProcessor ; }
-  
-  RefitProcessor() ;
-  RefitProcessor(const RefitProcessor&) = delete ;
-  RefitProcessor& operator=(const RefitProcessor&) = delete ;
-  
-=======
   virtual marlin::Processor* newProcessor() { return new RefitProcessor; }
 
   RefitProcessor();
   RefitProcessor(const RefitProcessor&) = delete;
   RefitProcessor& operator=(const RefitProcessor&) = delete;
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -87,49 +77,6 @@ protected:
 
   /** Input track collection name for refitting.
    */
-<<<<<<< HEAD
-  std::string _input_track_col_name {};
-  
-  /** Input track relations name for refitting.
-   */
-  std::string _input_track_rel_name {};
-  
-  /** refitted track collection name.
-   */
-  std::string _output_track_col_name {};
-  
-  /** Output track relations name for refitting.
-   */
-  std::string _output_track_rel_name {};
-  
-  /** pointer to the IMarlinTrkSystem instance 
-   */
-  MarlinTrk::IMarlinTrkSystem* _trksystem {nullptr};
-  
-  bool _MSOn {};
-  bool _ElossOn {};
-  bool _SmoothOn {};
-  
-  float _initialTrackError_d0{};
-  float _initialTrackError_phi0{};
-  float _initialTrackError_omega{};
-  float _initialTrackError_z0{};
-  float _initialTrackError_tanL{};
-  float _maxChi2PerHit{};
-  double _mass {};
-
-  int _n_run {};
-  int _n_evt {};
-
-  int _initialTrackState{};
-  int _fitDirection {};
-
-  std::string _trkSystemName {};
-  
-  float _bField{};
-  
-} ;
-=======
   std::string _input_track_col_name{};
 
   /** Input track relations name for refitting.
@@ -170,6 +117,5 @@ protected:
 
   float _bField{};
 };
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
 #endif

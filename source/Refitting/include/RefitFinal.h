@@ -15,7 +15,6 @@ class IMarlinTrack;
 } // namespace MarlinTrk
 
 class RefitFinal : public marlin::Processor {
-<<<<<<< HEAD
 
   /// Nhits cut struct
   struct NHitsCut{
@@ -23,8 +22,6 @@ class RefitFinal : public marlin::Processor {
     int nHits_min {}; // minimum number of hits
   };
 
-=======
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 public:
   virtual marlin::Processor* newProcessor() { return new RefitFinal; }
 
@@ -52,12 +49,8 @@ public:
   virtual void end();
 
 protected:
-<<<<<<< HEAD
-  int FitInit2(Track *track, MarlinTrk::IMarlinTrack *_marlinTrk);
-=======
   int FitInit2(Track* track, MarlinTrk::IMarlinTrack* _marlinTrk);
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /* helper function to get collection using try catch block */
   lcio::LCCollection* GetCollection(lcio::LCEvent* evt, std::string colName);
 

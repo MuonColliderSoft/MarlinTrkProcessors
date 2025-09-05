@@ -141,34 +141,7 @@ public:
       exit(1);
     }
 
-<<<<<<< HEAD
-      if( _h2D.at( idx ) ){
-        streamlog_out( ERROR ) << "create2D: Histogram already created ERROR exit(1) called from File" << __FILE__ << " line " << __LINE__ << std::endl;
-        exit(1);
-      }
-      
-      _h2D.at( idx ) = new TH2F(n, t, nBinX, minX, maxX, nBinY, minY, maxY) ;
-      
-      streamlog_out( DEBUG ) << " create 2D histo " <<  n << " at index " << idx << std::endl ;
-
-    }
-        
-    void fill2D( int idx , double valx, double valy, double weight=1.0 ){  _h2D.at( idx )->Fill(valx, valy, weight) ; }
-    
-    
-  protected:
-    
-    std::vector<TH1*> _h1D{};
-    std::vector<TH2*> _h2D{};
-
-  };
-  
-  
-  
-}
-=======
     _h2D.at(idx) = new TH2F(n, t, nBinX, minX, maxX, nBinY, minY, maxY);
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
     streamlog_out(DEBUG) << " create 2D histo " << n << " at index " << idx << std::endl;
   }
@@ -2113,21 +2086,12 @@ void SiliconTracking_MarlinTrk::CreateTrack(TrackExtended* trackAR) {
       if (found == 1) {
         if (_useSimpleAttachHitToTrack) { // improvement for the fitting
 
-<<<<<<< HEAD
-	  trackAR->ClearTrackerHitExtendedVec();
-	  for (int i=0;i<nHits;++i) {
-	    int i_opt = 2;
-	    TrackerHitExtended * trkHit = hitVec[i];
-	    AttachHitToTrack(trackOld, trkHit, i_opt );
-	  }
-=======
           trackAR->ClearTrackerHitExtendedVec();
           for (int i = 0; i < nHits; ++i) {
             int i_opt = 2;
             TrackerHitExtended* trkHit = hitVec[i];
             AttachHitToTrack(trackOld, trkHit, i_opt);
           }
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
         } else { // backward compatible
 

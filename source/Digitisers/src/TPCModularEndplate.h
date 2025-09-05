@@ -25,11 +25,7 @@ public:
   };
 
   /// no default c'tor
-<<<<<<< HEAD
-  TPCModularEndplate() = delete ;
-=======
   TPCModularEndplate() = delete;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   TPCModularEndplate(const TPCModularEndplate&) = delete;
   TPCModularEndplate& operator=(const TPCModularEndplate&) = delete;
 

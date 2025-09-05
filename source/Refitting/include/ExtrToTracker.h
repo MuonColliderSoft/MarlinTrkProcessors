@@ -57,14 +57,7 @@ class ExtrToTracker : public marlin::Processor {
 public:
   virtual marlin::Processor* newProcessor() { return new ExtrToTracker; }
 
-<<<<<<< HEAD
-
-  virtual marlin::Processor*  newProcessor() { return new ExtrToTracker ; }
-  
-  ExtrToTracker() ;
-=======
   ExtrToTracker();
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   ExtrToTracker(const ExtrToTracker&) = delete;
   ExtrToTracker& operator=(const ExtrToTracker&) = delete;
 
@@ -136,49 +129,6 @@ protected:
 
   /** Input track collection name for refitting.
    */
-<<<<<<< HEAD
-  std::string _input_track_col_name {};
-  
-
-  /** output collection name for the not used hits.
-   */
-  std::string _output_not_used_col_name {};
-  
-  /** output track collection name.
-   */
-  std::string _output_track_col_name {};
-  
-  /** Output track relations name for refitting.
-   */
-  std::string _output_track_rel_name {};
-  
-  /** pointer to the IMarlinTrkSystem instance 
-   */
-  MarlinTrk::IMarlinTrkSystem* _trksystem {nullptr};
-  
-  /* std::string _mcParticleCollectionName ; */
-
-  bool _MSOn {};
-  bool _ElossOn {};
-  bool _SmoothOn {};
-  double _Max_Chi2_Incr {};
-  double _searchSigma {};
-  
-  int _n_run {};
-  int _n_evt {};
-  int SITHitsFitted {};
-  int SITHitsNonFitted {};
-  int TotalSITHits {};
-  int _nHitsChi2 {};
-
-  float _bField{};
-
-  bool _performFinalRefit {};
- 
-  bool _extrapolateForward{};
-
-  const dd4hep::rec::SurfaceMap* _map {nullptr};
-=======
   std::string _input_track_col_name{};
 
   /** output collection name for the not used hits.
@@ -215,30 +165,10 @@ protected:
   float _bField{};
 
   bool _performFinalRefit{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   bool _extrapolateForward{};
 
-<<<<<<< HEAD
-  //processor parameters
-
-  StringVec _vecDigiHits{};
-  StringVec _vecSubdetName{};
-  std::vector<bool > _vecSubdetIsBarrel{};
-  std::vector<int > _vecSubdetNLayers{};
-  std::vector<int > _vecSubdetID{};
-  std::vector<LCCollection* > _vecDigiHitsCol{};
-  std::vector<std::map<dd4hep::CellID , std::vector<dd4hep::CellID > >* >  _vecMapNeighbours{};
-
-  std::vector<std::map<int , std::vector<TrackerHitPlane* > > > _vecMapsElHits{};
-
-  std::vector<std::vector<TrackerHitPlane* > > _vecvecHitsInCol{};
- 
- 
-} ;
-=======
   const dd4hep::rec::SurfaceMap* _map{nullptr};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   // processor parameters
 

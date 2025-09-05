@@ -214,17 +214,6 @@ class Detector;
  */
 class FPCCDSiliconTracking_MarlinTrk : public Processor {
 public:
-<<<<<<< HEAD
-  
-  virtual Processor*  newProcessor() { return new FPCCDSiliconTracking_MarlinTrk ; }
-  
-  
-  FPCCDSiliconTracking_MarlinTrk() ;
-  FPCCDSiliconTracking_MarlinTrk(const FPCCDSiliconTracking_MarlinTrk&) = delete ;
-  FPCCDSiliconTracking_MarlinTrk& operator=(const FPCCDSiliconTracking_MarlinTrk&) = delete ;
-  
-  /**  
-=======
   virtual Processor* newProcessor() { return new FPCCDSiliconTracking_MarlinTrk; }
 
   FPCCDSiliconTracking_MarlinTrk();
@@ -232,7 +221,6 @@ public:
   FPCCDSiliconTracking_MarlinTrk& operator=(const FPCCDSiliconTracking_MarlinTrk&) = delete;
 
   /**
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
    * Initialization
    */
   virtual void init();
@@ -249,31 +237,6 @@ public:
 
   /** Called after data processing for clean up.
    */
-<<<<<<< HEAD
-  virtual void end() ;
-  
-  
-protected:
-  
-  int _nRun {};
-  int _nEvt {};
-  EVENT::LCEvent* _current_event{nullptr};
-  
-  int _nDivisionsInPhi{};
-  int _nDivisionsInTheta{};
-  int _nLayers{};
-  
-  MarlinTrk::HelixFit* _fastfitter{nullptr};
-  
-  /** pointer to the IMarlinTrkSystem instance 
-   */
-  MarlinTrk::IMarlinTrkSystem* _trksystem {nullptr};
-  bool _runMarlinTrkDiagnostics{};
-  std::string _MarlinTrkDiagnosticsName{};
-  
-  bool _MSOn{}, _ElossOn{}, _SmoothOn{};
-  
-=======
   virtual void end();
 
 protected:
@@ -295,33 +258,11 @@ protected:
 
   bool _MSOn{}, _ElossOn{}, _SmoothOn{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _initialTrackError_d0{};
   float _initialTrackError_phi0{};
   float _initialTrackError_omega{};
   float _initialTrackError_z0{};
   float _initialTrackError_tanL{};
-<<<<<<< HEAD
-  
-  double _maxChi2PerHit{};
-  double _maxChi2PerHit2nd{};
-  
-  bool  _UseEventDisplay{};
-  std::vector<int> _colours{};
-  
-  void drawEvent();
-  
-  
-  // histogram member variables
-  
-  bool  _createDiagnosticsHistograms{};
-  DiagnosticsHistograms::Histograms* _histos {nullptr};
-
-  
-  int _ntriplets{}, _ntriplets_good{}, _ntriplets_2MCP{}, _ntriplets_3MCP{}, _ntriplets_1MCP_Bad{}, _ntriplets_bad{};
-  
-  
-=======
 
   double _maxChi2PerHit{};
   double _maxChi2PerHit2nd{};
@@ -338,7 +279,6 @@ protected:
 
   int _ntriplets{}, _ntriplets_good{}, _ntriplets_2MCP{}, _ntriplets_3MCP{}, _ntriplets_1MCP_Bad{}, _ntriplets_bad{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** helper function to get collection using try catch block */
   LCCollection* GetCollection(LCEvent* evt, std::string colName);
 
@@ -346,14 +286,8 @@ protected:
   LCRelationNavigator* GetRelations(LCEvent* evt, std::string RelName);
 
   /** input MCParticle collection and threshold used for Drawing */
-<<<<<<< HEAD
-  std::string  _colNameMCParticles{};
-  
-  
-=======
   std::string _colNameMCParticles{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /// Compare tracks according to their chi2/ndf
   struct compare_TrackExtended {
     // n.b.: a and b should be TrackExtended const *, but the getters are not const :-(
@@ -363,26 +297,11 @@ protected:
       return (a->getChi2() / a->getNDF() < b->getChi2() / b->getNDF());
     }
   };
-<<<<<<< HEAD
-  
-  
-=======
-
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   std::string _VTXHitCollection{};
   std::string _FTDPixelHitCollection{};
   std::string _FTDSpacePointCollection{};
   std::string _SITHitCollection{};
   std::string _siTrkCollection{};
-<<<<<<< HEAD
-  
-  std::vector< LCCollection* > _colTrackerHits{};
-  std::map< LCCollection*, std::string > _colNamesTrackerHits{};
-  
-  std::vector<TrackerHitExtendedVec> _sectors{};
-  std::vector<TrackerHitExtendedVec> _sectorsFTD{};
-  
-=======
 
   std::vector<LCCollection*> _colTrackerHits{};
   std::map<LCCollection*, std::string> _colNamesTrackerHits{};
@@ -390,7 +309,6 @@ protected:
   std::vector<TrackerHitExtendedVec> _sectors{};
   std::vector<TrackerHitExtendedVec> _sectorsFTD{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /**
    * A helper class to allow good code readability by accessing tracks with N hits.
    * As the smalest valid track contains three hits, but the first index in a vector is 0,
@@ -422,16 +340,6 @@ protected:
     }
 
   protected:
-<<<<<<< HEAD
-    std::vector< TrackExtendedVec > _tracksNHits{};
-    size_t _maxIndex{}; /// local cache variable to avoid calculation overhead
-  };
-  
-  TracksWithNHitsContainer _tracksWithNHitsContainer{};
-  
-  int InitialiseVTX(LCEvent * evt);
-  int InitialiseFTD(LCEvent * evt);
-=======
     std::vector<TrackExtendedVec> _tracksNHits{};
     size_t _maxIndex{}; /// local cache variable to avoid calculation overhead
   };
@@ -440,22 +348,14 @@ protected:
 
   int InitialiseVTX(LCEvent* evt);
   int InitialiseFTD(LCEvent* evt);
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   void ProcessOneSector(int iSectorPhi, int iSectorTheta);
   void ProcessOneSectorVer2(int iSectorPhi, int iSectorTheta);
   void CleanUp();
   TrackExtended* TestTriplet(TrackerHitExtended* outerHit, TrackerHitExtended* middleHit, TrackerHitExtended* innerHit,
                              HelixClass_double& helix, int omegamode);
 
-<<<<<<< HEAD
-  int _useBuildTrackForHighPt{};
-  double _cosThetaRangeForBuildTrackForHighPt{};
-  double _phiRangeForBuildTrackForHighPt{};
-  void getPhiThetaRegionForHighPt(int* boundaries,TrackExtended* trackAR);
-=======
   int BuildTrack_KalFit(TrackerHitExtended* outerHit, TrackerHitExtended* middleHit, TrackerHitExtended* innerHit,
                         HelixClass_double& helix, int innerlayer, TrackExtended* trackAR);
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   int _useBuildTrackForHighPt{};
   double _cosThetaRangeForBuildTrackForHighPt{};
@@ -475,11 +375,6 @@ protected:
   int AttachHitToTrack_KalFit(TrackExtended* trackAR, TrackerHitExtended* hit);
 
   void FinalRefit(LCCollectionVec* trk_col, LCCollectionVec* rel_col);
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _bField{};
   float _chi2WRPhiTriplet{};
   float _chi2WRPhiQuartet{};
@@ -491,40 +386,6 @@ protected:
   float _minDistCutAttachForVXD{};
   int _minimalLayerToAttach{};
   int _minMissAddition{};
-<<<<<<< HEAD
-  
-  // two pi is not a constant in cmath. Calculate it, once!
-  static const double TWOPI;
-  
-  double _dPhi{};
-  double _dTheta{};
-  double _dPhiFTD{};
-  
-
-  
-  std::vector<int> _Combinations{};
-  std::vector<int> _CombinationsFTD{};
-  
-  float _resolutionRPhiVTX{};
-  float _resolutionZVTX{};
-  
-  float _resolutionRPhiFTD{};
-  float _resolutionZFTD{};
-  
-  float _resolutionRPhiSIT{};
-  float _resolutionZSIT{};
-  
-  float _phiCutForMerging{};
-  float _tanlambdaCutForMerging{};
-  float _angleCutForMerging{};
-  //float _angleCutForMerging_highPt;
-  //float _angleCutForMerging_lowPt;
-  
-  int _print{};
-  int _checkForDelta{};
-  float _minDistToDelta{};
-  
-=======
 
   // two pi is not a constant in cmath. Calculate it, once!
   static const double TWOPI;
@@ -555,71 +416,20 @@ protected:
   int _checkForDelta{};
   float _minDistToDelta{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _distRPhi{};
   float _distZ{};
   float _chi2FitCut{};
   float _chi2FitCut_lowPt{};
-<<<<<<< HEAD
-  
-  
-  TrackExtendedVec _trackImplVec{};
-  
-  
-  float _cutOnD0{}, _cutOnZ0{}, _cutOnOmegaVXD{}, _cutOnOmegaFTD{};
-  double _cutOnPtVXD{},_cutOnPtFTD{};
-  
-=======
 
   TrackExtendedVec _trackImplVec{};
 
   float _cutOnD0{}, _cutOnZ0{}, _cutOnOmegaVXD{}, _cutOnOmegaFTD{};
   double _cutOnPtVXD{}, _cutOnPtFTD{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   int _minimalHits{};
   int _nHitsChi2{};
   int _attachVXD{};
   int _attachFTD{};
-<<<<<<< HEAD
-  
-  int _max_hits_per_sector{};
-  
-  int _nTotalVTXHits{},_nTotalFTDHits{},_nTotalSITHits{};
-  int _useSIT{};
-  int _useFTD{};
-  
-  
-  //  int _createMap;
-  
-  UTIL::BitField64* _encoder{nullptr};
-  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
-  int getSideID(TrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
-  int getLayerID(TrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
-  int getModuleID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::module()]; };
-  int getSensorID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::sensor()]; };
-
-  int getDetectorID(SimTrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
-  int getSideID(SimTrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
-  int getLayerID(SimTrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
-  int getModuleID(SimTrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::module()]; };
-  int getSensorID(SimTrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::sensor()]; };
-  
-  void setupGeom(const dd4hep::Detector& theDetector) ;
-  
-  
-  unsigned int _nLayersVTX{};
-  
-  unsigned int _nLayersSIT{};
-  
-  
-  std::vector<float> _zLayerFTD{};
-  
-  unsigned int _nlayersFTD{};
-  bool _petalBasedFTDWithOverlaps{};
-  int _nPhiFTD{};
-
-=======
 
   int _max_hits_per_sector{};
 
@@ -684,17 +494,12 @@ protected:
   bool _petalBasedFTDWithOverlaps{};
   int _nPhiFTD{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   int _output_track_col_quality{};
   static const int _output_track_col_quality_GOOD;
   static const int _output_track_col_quality_FAIR;
   static const int _output_track_col_quality_POOR;
 
-<<<<<<< HEAD
-  int _sw_theta{};//search window theta
-=======
   int _sw_theta{}; // search window theta
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _chi2FitCut_kalman{};
   bool _useClusterRejection{};
   float _minDotOf2Clusters{};
@@ -709,24 +514,6 @@ protected:
 
   struct GeoData_t {
     int nladder{};
-<<<<<<< HEAD
-    double rmin{};  // distance of inner surface of sensitive region from IP
-    double dphi{};  // azimuthal angle step of each ladder
-    double phi0{};  // aximuthal angle offset
-    std::vector<double> cosphi{};  // cos[phi_ladder], cos_phi of each ladder
-    std::vector<double> sinphi{};  // sin[phi_ladder], sin_phi of each ladder
-    std::vector<double> phi{};  // phi of each ladder
-    std::vector<double> phiAtXiMin{};  // phiAtXiMin of each ladder
-    std::vector<double> phiAtXiMax{};  // phiAtXiMax of each ladder
-    std::vector<double> ladder_incline{};//the tilt of the line of the ladder expressed by phi
-    double sthick{};  // sensitive region thickness
-    double sximin{};  // minimum xi of sensitive region.
-    double sximax{};  // maximum xi of sensitive region
-    double hlength{}; // ladder's half length in z
-    int num_xi_pixel{};      // Number of xi pixel in this ladder
-    int num_zeta_pixel{};    // Number of zeta pixel in this ladder
-    double rmes{}; //distance in R of measurement surface
-=======
     double rmin{};                        // distance of inner surface of sensitive region from IP
     double dphi{};                        // azimuthal angle step of each ladder
     double phi0{};                        // aximuthal angle offset
@@ -743,47 +530,21 @@ protected:
     int num_xi_pixel{};                   // Number of xi pixel in this ladder
     int num_zeta_pixel{};                 // Number of zeta pixel in this ladder
     double rmes{};                        // distance in R of measurement surface
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   };
 
   struct vxdGeoData_t {
-<<<<<<< HEAD
-  int nLayer{};
-  int maxLadder{};
-  std::vector<GeoData_t> geodata{};
-  }_vxd{},_sit{};
-=======
     int nLayer{};
     int maxLadder{};
     std::vector<GeoData_t> geodata{};
   } _vxd{}, _sit{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   void InitVXDGeometry(const dd4hep::Detector& theDetector);
   void InitSITGeometry(const dd4hep::Detector& theDetector);
   FloatVec _pixelSizeVec{};
   float _pixelheight{};
-<<<<<<< HEAD
-  TVector3 LocalToGlobal(TVector3 local,int layer,int ladder);
-  //purityMCP CheckOriginOf2Clusters(TrackerHit* A, TrackerHit* B);
-  void calcTrackParameterOfMCP(MCParticle* pmcp, double* par);
-  
-  class ClusterStatus{
-    public :
-    int cellid0 {};
-    int cellid1{};
-    unsigned int layer {};
-    unsigned int ladder{};
-    unsigned int   xiwidth {};
-    unsigned int zetawidth {};
-    unsigned int      nPix {};
-    unsigned int      tilt {};
-    unsigned int   quality {};
-=======
   TVector3 LocalToGlobal(TVector3 local, int layer, int ladder);
   // purityMCP CheckOriginOf2Clusters(TrackerHit* A, TrackerHit* B);
   void calcTrackParameterOfMCP(MCParticle* pmcp, double* par);
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   class ClusterStatus {
   public:
@@ -816,42 +577,24 @@ protected:
     ClusterStatus() { ; }
   };
 
-<<<<<<< HEAD
-  //Old Ver//////////////////
-  typedef std::map< std::pair< int, int >, int > RangeMap;
-=======
   // Old Ver//////////////////
   typedef std::map<std::pair<int, int>, int> RangeMap;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   RangeMap _phiRangeForTriplet{};
 
   double getNeededPhiSectors(double Pt, int outly, int inly); // Difference of radian is returned
   ///////////////////////////
 
-<<<<<<< HEAD
-  //New Ver////////////////////==under construction====
-  typedef std::map< std::vector<int> , std::vector<int> > RangeMapVer2;
-=======
   // New Ver////////////////////==under construction====
   typedef std::map<std::vector<int>, std::vector<int>> RangeMapVer2;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   RangeMapVer2 _phiRangeForTripletVer2{};
   void getNeededPhiSectorsVer2(double Pt, std::vector<int> layers, std::vector<double>& phiDiff);
   /////////////////////////////========================
 
-<<<<<<< HEAD
-  float _safetyPhiRange_ratio{};/**
-  Extra range in addition to main range used for triplet construction process and needed to find triplet 
-  is calculated by getNeededPhiSectors, but safety range is not considered.
-  Value of _safetyRange is used such as Range = Range*(1 + _safetyRange);
-  */
-=======
   float _safetyPhiRange_ratio{}; /**
    Extra range in addition to main range used for triplet construction process and needed to find triplet
    is calculated by getNeededPhiSectors, but safety range is not considered.
    Value of _safetyRange is used such as Range = Range*(1 + _safetyRange);
    */
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   int _safetyPhiRange_fix{};
   float _fudgeFactorForSITsr_rphi{};
   float _fudgeFactorForSITsr_z{};
@@ -880,26 +623,12 @@ protected:
 
   bool _keepCandidate{}; // used in AttachRemainingVTXHitsVeryFast <-- under construction for now
 
-<<<<<<< HEAD
-  double _nSigmaBuild_phi{};
-  double _nSigmaBuild_theta{};
-
-  bool _keepCandidate{};//used in AttachRemainingVTXHitsVeryFast <-- under construction for now
-
-  moriUTIL* _moriUtil{nullptr};
-  GetPurityUtil* _purityUtil{nullptr};
-
-////////////////////////////////////////////////////////////////
-////from here, a lot of debug tools and variables for mori /////
-////////////////////////////////////////////////////////////////
-=======
   moriUTIL* _moriUtil{nullptr};
   GetPurityUtil* _purityUtil{nullptr};
 
   ////////////////////////////////////////////////////////////////
   ////from here, a lot of debug tools and variables for mori /////
   ////////////////////////////////////////////////////////////////
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   bool _mydebug{};
   bool _mydebugKalFit{};
   bool _mydebugIntersection{};
@@ -910,30 +639,17 @@ protected:
   bool _mydebugVXDHits{};
   bool _mydebugSITHits{};
   bool _mydebugTriplet{};
-<<<<<<< HEAD
-  int  _mydebugTripletMode{};
-=======
   int _mydebugTripletMode{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   bool _mydebugTripletVXD{};
   bool _mydebugTripletFTD{};
   bool _mydebugTripletVXDFTD{};
   bool _mydebugBuildTrack{};
-<<<<<<< HEAD
-  int  _mydebugBuildTrackMode{};
-  bool _mydebugAttachVXD{};
-  bool _mydebugPrintMCP{};
-  bool _stopwatch{};
-  class Timer{
-   public:
-=======
   int _mydebugBuildTrackMode{};
   bool _mydebugAttachVXD{};
   bool _mydebugPrintMCP{};
   bool _stopwatch{};
   class Timer {
   public:
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
     TStopwatch inAnEvt{};
     TStopwatch InitialiseVTX{};
     TStopwatch InitialiseFTD{};
@@ -944,11 +660,7 @@ protected:
     TStopwatch AttachRemainingVXD{};
     TStopwatch AttachRemainingFTD{};
     TStopwatch FinalRefit{};
-<<<<<<< HEAD
-    void reset(){
-=======
     void reset() {
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
       inAnEvt.Reset();
       InitialiseVTX.Reset();
       InitialiseFTD.Reset();
@@ -974,23 +686,6 @@ protected:
              AttachRemainingFTD.CpuTime());
       printf("FinalRefit        : RT=%.3f s, CPU=%.3f s \n", FinalRefit.RealTime(), FinalRefit.CpuTime());
     }
-<<<<<<< HEAD
-    Timer(){reset();}
-  }_timer{};
-  TStopwatch _timer2Triplet{};
-  TStopwatch _timer2Build{};
-  bool  _mydebugstopwatch2{};
-
-  float _currentPurity{};
-  MCPMap LoadMCPMap();
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXD{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXDFTD{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXDSIT{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpVXDFTDSIT{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpFTD{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpFTDSIT{};
-  std::map< MCParticle*, SimTrackerHitVec > _mcpSIT{};
-=======
     Timer() { reset(); }
   } _timer{};
   TStopwatch _timer2Triplet{};
@@ -1006,7 +701,6 @@ protected:
   std::map<MCParticle*, SimTrackerHitVec> _mcpFTD{};
   std::map<MCParticle*, SimTrackerHitVec> _mcpFTDSIT{};
   std::map<MCParticle*, SimTrackerHitVec> _mcpSIT{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   enum MCPContributions {
     contVXD,
@@ -1022,31 +716,6 @@ protected:
 
   enum MCPContributions getMCPContribution(IntVec nsub);
 
-<<<<<<< HEAD
-  class Triplet : public IMPL::TrackImpl{
-   public :
-     static int numOfProcesses;
-     int id{};
-     int quality_code{};
-     int detID[3]{};//内側に近いところから詰める。
-     int layer[3]{};
-     float probability{};
-     float purity{};
-     SimTrackerHitVec simVecFromTrk{};//TrackerHitVecに対応するもの
-     std::pair< MCParticle* , SimTrackerHitVec > mcTruth {};//Dominant MCPについての情報
-
-     //new (2013_08_10)
-     TrackerHitVec truthTrkHits {};//Dominant MCPのsimthitsに対応するTrackerHitVec.
-     enum MCPContributions mcpcont{};
-     IntVec nsub{};//vxd:0,sit:1,ftd:2 <--for Dominant MCP
-     
-
-     float mcp_d0{};
-     float mcp_z0{};
-     float mcp_omega{};
-     float mcp_phi0{};
-     float mcp_tanL{};
-=======
   class Triplet : public IMPL::TrackImpl {
   public:
     static int numOfProcesses;
@@ -1069,71 +738,9 @@ protected:
     float mcp_omega{};
     float mcp_phi0{};
     float mcp_tanL{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
     // bool availableInBuildedTrack;
 
-<<<<<<< HEAD
-     Triplet(bool incrementID = true){
-       id = numOfProcesses; 
-       if(incrementID){
-         numOfProcesses++;
-       }
-       quality_code = -1;
-       detID[0] = detID[1] = detID[2] = -1;
-       layer[0] = layer[1] = layer[2] = -1;
-       probability = 1e20;
-       purity = 1e20;
-       simVecFromTrk.clear();
-       mcTruth.first = 0; mcTruth.second.clear();
-       truthTrkHits.clear();
-       mcpcont = contSize;
-       nsub.clear();
-       mcp_d0 = mcp_z0 = mcp_omega = mcp_phi0 = mcp_tanL = 1e20;
-     }
-     Triplet(const Triplet&) = default;
-  };
-  Triplet* _curtriplet{nullptr};
-  
-
-  enum BuildTrackResult{
-    NormalEnd,
-    ManyMisAssignments,
-    ManyOutliers,
-    PhiThetaError,
-    BuildTrackResultSize
-  };
-  class BuildedTrack : public IMPL::TrackImpl{
-   public :
-     static int numOfProcesses;
-     int id{};
-
-     BuildTrackResult result{};
-     int nMisAssign{};
-     Triplet triplet{};
-     const MCParticle* truthmcp{nullptr};
-     SimTrackerHitVec simvec{};
-     float probability{};
-     float purity{};
-     SimTrackerHitVec simVecFromTrk{};//TrackerHitVecに対応するもの
-     BuildedTrack():triplet(false){
-        id = numOfProcesses; 
-        numOfProcesses++;
-        result = BuildTrackResultSize;
-        nMisAssign = -1;
-        truthmcp = 0;
-        simvec.clear();
-        probability = 1e20;
-        purity = 1e20;
-        simVecFromTrk.clear();
-     }
-     BuildedTrack(const BuildedTrack&) = default;
-     BuildedTrack& operator=(const BuildedTrack&) = default;
-  };
-  bool _availableInBuildedTrack{};
-
-  typedef std::vector< BuildedTrack > BuildedTrackVec;
-=======
     Triplet(bool incrementID = true) {
       id = numOfProcesses;
       if (incrementID) {
@@ -1187,40 +794,21 @@ protected:
   bool _availableInBuildedTrack{};
 
   typedef std::vector<BuildedTrack> BuildedTrackVec;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   BuildedTrackVec _buildedTrackContainer{};
   void SetBuildedTrack(TrackExtended* trackAR, BuildedTrackVec& btrackvec);
   void BuildedTrackDebuger1(BuildedTrackVec::iterator begin, BuildedTrackVec::iterator end);
   void BuildedTrackDebuger2(std::vector<const BuildedTrack*>::iterator begin,
                             std::vector<const BuildedTrack*>::iterator end);
 
-<<<<<<< HEAD
-  //時間がアレばclass templateにしてみたい。
-  class MCP_BuildedTrack{
-   public :
-    std::pair<MCParticle*,SimTrackerHitVec> pair{};
-    IntVec nsub{};//nhits in sub detectors. 0 VXD, 1 FTD, 2 SIT
-=======
   // 時間がアレばclass templateにしてみたい。
   class MCP_BuildedTrack {
   public:
     std::pair<MCParticle*, SimTrackerHitVec> pair{};
     IntVec nsub{}; // nhits in sub detectors. 0 VXD, 1 FTD, 2 SIT
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
     std::vector<const BuildedTrack*> BuildedTrackVec{};
     std::vector<const BuildedTrack*> BuildedTrack2ndVec{};
     std::vector<const BuildedTrack*> BuildedTrack3rdVec{};
   };
-<<<<<<< HEAD
-  typedef std::map<MCParticle*,MCP_BuildedTrack> BTMap; 
-  BTMap _mcpBuildedTrackContainer{};
-
-  std::vector< std::map<MCParticle*, MCP_BuildedTrack> > _mcpRemainingBTContainerA{};
-  //purity 100%のトリプレットが生成されなかった生成されなかったmcp
-  std::vector< std::map<MCParticle*, MCP_BuildedTrack> > _mcpRemainingBTContainerB{};
-  //purity 100%のトリプレットが生成されたものの、quality_code != 0により結局再構成されなかったmcp
-  
-=======
   typedef std::map<MCParticle*, MCP_BuildedTrack> BTMap;
   BTMap _mcpBuildedTrackContainer{};
 
@@ -1228,33 +816,18 @@ protected:
   // purity 100%のトリプレットが生成されなかった生成されなかったmcp
   std::vector<std::map<MCParticle*, MCP_BuildedTrack>> _mcpRemainingBTContainerB{};
   // purity 100%のトリプレットが生成されたものの、quality_code != 0により結局再構成されなかったmcp
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   std::vector<Triplet> _tripletContainer{};
 
-<<<<<<< HEAD
-
-  std::vector< Triplet > _tripletContainer{};
-
-  class MCP_Triplet{
-   public :
-    std::pair<MCParticle*,SimTrackerHitVec> pair{};
-    IntVec nsub{};//nhits in sub detectors. 0 VXD, 1 FTD, 2 SIT
-=======
   class MCP_Triplet {
   public:
     std::pair<MCParticle*, SimTrackerHitVec> pair{};
     IntVec nsub{}; // nhits in sub detectors. 0 VXD, 1 FTD, 2 SIT
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
     std::vector<const Triplet*> tripvec{};
     std::vector<const Triplet*> trip2ndvec{};
     std::vector<const Triplet*> trip3rdvec{};
   };
-<<<<<<< HEAD
-  typedef std::map<MCParticle*,MCP_Triplet> TripMap; 
-=======
   typedef std::map<MCParticle*, MCP_Triplet> TripMap;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   TripMap _mcpTripletContainer{};
 
   std::vector<std::map<MCParticle*, MCP_Triplet>> _mcpRemainingTRContainerA{};
@@ -1262,16 +835,7 @@ protected:
   std::vector<std::map<MCParticle*, MCP_Triplet>> _mcpRemainingTRContainerB{};
   // purity 100%のトリプレットが生成されたものの、quality_code != 0により結局再構成されなかったmcp
 
-<<<<<<< HEAD
-  std::vector< std::map<MCParticle*, MCP_Triplet> > _mcpRemainingTRContainerA{};
-  //purity 100%のトリプレットが生成されなかった生成されなかったmcp
-  std::vector< std::map<MCParticle*, MCP_Triplet> > _mcpRemainingTRContainerB{};
-  //purity 100%のトリプレットが生成されたものの、quality_code != 0により結局再構成されなかったmcp
-  
-  void TripletDebugerWithMCPRemain(int nth, std::vector< std::map<MCParticle*, MCP_Triplet> > A);
-=======
   void TripletDebugerWithMCPRemain(int nth, std::vector<std::map<MCParticle*, MCP_Triplet>> A);
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   MCPMap _mcpMap{};
   std::vector<LCRelationNavigator*> _naviVec{};

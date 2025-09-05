@@ -43,18 +43,6 @@ using namespace marlin;
  */
 
 class TrackSubsetProcessor : public Processor {
-<<<<<<< HEAD
-  
- public:
-  
-  virtual Processor*  newProcessor() { return new TrackSubsetProcessor ; }
-  
-  
-  TrackSubsetProcessor() ;
-  TrackSubsetProcessor(const TrackSubsetProcessor&) = delete ;
-  TrackSubsetProcessor& operator=(const TrackSubsetProcessor&) = delete ;
-  
-=======
 public:
   virtual Processor* newProcessor() { return new TrackSubsetProcessor; }
 
@@ -62,7 +50,6 @@ public:
   TrackSubsetProcessor(const TrackSubsetProcessor&) = delete;
   TrackSubsetProcessor& operator=(const TrackSubsetProcessor&) = delete;
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -89,52 +76,18 @@ protected:
   void removeShortTracks(std::vector<EVENT::Track*>& tracks);
 
   /** Input collection names */
-<<<<<<< HEAD
-  std::vector< std::string > _trackInputColNames{};
-  
-  /** Output collection name */
-  std::string _trackOutputColName{};
-  
-  MarlinTrk::IMarlinTrkSystem* _trkSystem{nullptr};
-  std::string _trkSystemName {};
-  
-  bool _MSOn {};
-  bool _ElossOn {};
-  bool _SmoothOn {};
-  bool _removeShortTracks {};
-=======
   std::vector<std::string> _trackInputColNames{};
 
   /** Output collection name */
   std::string _trackOutputColName{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   MarlinTrk::IMarlinTrkSystem* _trkSystem{nullptr};
   std::string _trkSystemName{};
 
-<<<<<<< HEAD
-  float _initialTrackError_d0{};
-  float _initialTrackError_phi0{};
-  float _initialTrackError_omega{};
-  float _initialTrackError_z0{};
-  float _initialTrackError_tanL{};
-  
-  double _maxChi2PerHit{};
-  
-  float _bField{};
-  
-  int _nRun {};
-  int _nEvt {};
-  
-  double _omega{};
-  
-} ;
-=======
   bool _MSOn{};
   bool _ElossOn{};
   bool _SmoothOn{};
   bool _removeShortTracks{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   float _initialTrackError_d0{};
   float _initialTrackError_phi0{};
@@ -179,13 +132,7 @@ public:
   inline double operator()(Track* track) { return ROOT::Math::chisquared_cdf_c(track->getChi2(), track->getNdf()); }
 
 protected:
-<<<<<<< HEAD
-  
   MarlinTrk::IMarlinTrkSystem* _trkSystem{nullptr};
-    
-=======
-  MarlinTrk::IMarlinTrkSystem* _trkSystem{nullptr};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 };
 
 #endif
