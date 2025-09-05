@@ -18,12 +18,16 @@
 
 #include <algorithm>
 
+#include <UTIL/LCRelationNavigator.h>
+
 using namespace lcio ;
 using namespace marlin ;
 
-
 FilterConeHits aFilterConeHits ;
 
+void FilterConeHits::processRunHeader( EVENT::LCRunHeader* h ) {
+  _nRun++ ;
+}
 
 FilterConeHits::FilterConeHits() : Processor("FilterConeHits") {
 
@@ -119,19 +123,13 @@ void FilterConeHits::init() {
   m_time   = new TH1F("m_time","time at the point of closest approach;T [mm/GeV]", 1000, 0., 2000.);
   m_pathLength = new TH1F("m_pathLength","pathlength at the point of closest approach;L [mm]", 1000, 0., 12000.);
 
-}
-
-
-void FilterConeHits::processRunHeader( LCRunHeader* ) {
-
-  _nRun++ ;
-
 } 
 
-
-
 void FilterConeHits::processEvent( LCEvent * evt ) { 
-
+  
+  streamlog_out(MESSAGE) << "[FilterConeHits] processEvent run=" << evt->getRunNumber() << " evt=" << evt->getEventNumber() << std::endl;
+  std::cout << "[FilterConeHits] processEvent reached for evt " << evt->getEventNumber() << std::endl;
+  
   // --- Check whether the number of input and output collections match
 
   if ( m_inputTrackerHitsCollNames.size() != m_inputTrackerSimHitsCollNames.size() ||
@@ -212,6 +210,8 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       continue;
     }
 
+    std::cout << "input hit relations collection: " << inputHitRels[icol] << std::endl;
+
     // reco hit output collections
     std::string encoderString = inputHitColls[icol]->getParameters().getStringVal( "CellIDEncoding" );
     outputTrackerHitColls[icol] = new LCCollectionVec( inputHitColls[icol]->getTypeName() );
@@ -249,6 +249,10 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
     double part_p = sqrt( part->getMomentum()[0]*part->getMomentum()[0] +
 			  part->getMomentum()[1]*part->getMomentum()[1] +
 			  part->getMomentum()[2]*part->getMomentum()[2] );
+    
+    std::cout << "[MCP LOOP]: ipart: " << ipart << std::endl;
+    std::cout << "[MCP LOOP]: pdg " << part->getPDG() << std::endl;
+    std::cout << "[MCP LOOP]: momentum: " << part->getMomentum()[0] << ", " << part->getMomentum()[1] << ", " << part->getMomentum()[2] << std::endl;
 
     HelixClass_double helix;
     helix.Initialize_VP( (double*) part->getVertex(), (double*) part->getMomentum(),
@@ -319,6 +323,8 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
   
   for (unsigned int icol=0; icol<inputHitColls.size(); ++icol){
 
+    UTIL::LCRelationNavigator nav( inputHitRels[icol] );
+
     for ( auto& ihit: hits_to_save[icol] ){
 
       TrackerHitPlane* hit = dynamic_cast<TrackerHitPlane*>(inputHitColls[icol]->getElementAt(ihit));
@@ -337,13 +343,41 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       hit_new->setTime(hit->getTime());
       hit_new->setQuality(hit->getQuality());   
 
+      std::cout << std::fixed << std::setprecision(3);
+      const double* reco_pos = hit->getPosition();
+      const auto reco_time = hit->getTime();
+      std::cout << "[RECO HIT]: position " << reco_pos[0] << ", " << reco_pos[1] << ", " << reco_pos[2] << std::endl;
+      std::cout << "[RECO HIT]: time " << reco_time << std::endl;
+
       outputTrackerHitColls[icol]->addElement( hit_new );
+
+      const auto& tos = nav.getRelatedToObjects( hit );
+      const auto& ws  = nav.getRelatedToWeights( hit );
+
+      int mc = 0, nullmc = 0;
+      for (size_t k = 0; k < tos.size(); ++k) {
+        auto* sim = dynamic_cast<SimTrackerHit*>( tos[k] );
+        bool hasMC = (sim && sim->getMCParticle());
+        if (hasMC) ++mc; else ++nullmc;
+      }
+
+      std::cout << "[per-hit] " << m_inputTrackerHitsCollNames[icol]
+                << "[" << ihit << "] candidates=" << tos.size()
+                << " withMC=" << mc << " nullMC=" << nullmc << std::endl;
 
 
       LCRelation* rel = dynamic_cast<LCRelation*>(inputHitRels[icol]->getElementAt(ihit));
 
+      auto* fromObj = rel ? rel->getFrom() : nullptr;
+      auto* toObj   = rel ? rel->getTo()   : nullptr;
+
+      std::cout << "[align] hits[" << ihit << "]@" << (void*)hit
+                << "  rel[" << ihit << "] from@" << (void*)fromObj
+                << "  to@" << (void*)toObj
+                << "  from==hit? " << (fromObj==hit) << std::endl; 
       
       SimTrackerHit* simhit = dynamic_cast<SimTrackerHit*>(rel->getTo());
+
       SimTrackerHitImpl* simhit_new = new SimTrackerHitImpl();
 
       simhit_new->setCellID0(simhit->getCellID0());
@@ -367,26 +401,36 @@ void FilterConeHits::processEvent( LCEvent * evt ) {
       rel_new->setTo(simhit_new);
       rel_new->setWeight(rel->getWeight());
 
+      auto* mcp_sim = simhit->getMCParticle();
+      const float* p_sim = simhit->getMomentum();
+      const double* sim_pos = simhit->getPosition();
+      const auto sim_time = simhit->getTime();
+
+      std::cout << std::fixed << std::setprecision(3);
+      std::cout << "[SIM HIT]: position" << sim_pos[0] << ", " << sim_pos[1] << ", " << sim_pos[2] << std::endl;
+
+      std::cout << "[SIM HIT]: mcparticle: " << mcp_sim
+                <<(mcp_sim ? ("PDG = " + std::to_string(mcp_sim->getPDG())) : "") << "\n";
+      std::cout << "[SIM HIT]: momentum: [" << p_sim[0] << ", " << p_sim[1] << ", " << p_sim[2] << "]\n";
+      std::cout << "[SIM HIT]: time: " << sim_time << std::endl;
+      
       outputTrackerHitRels[icol]->addElement( rel_new );
 
     } // ihit loop
 
-    streamlog_out( MESSAGE ) << " " << hits_to_save[icol].size() << " hits added to the collections: "
+    std::cout << " " << hits_to_save[icol].size() << " hits added to the collections: "
 			     << m_outputTrackerHitsCollNames[icol] << ", "
 			     << m_outputTrackerSimHitsCollNames[icol] << ", "
 			     << m_outputTrackerHitRelNames[icol] << std::endl;
+
+
+    streamlog_out( MESSAGE ) << " <<<DIAG>>> " << hits_to_save[icol].size() << " hits added to: " << std::endl;
 
     evt->addCollection( outputTrackerHitColls[icol], m_outputTrackerHitsCollNames[icol] ) ;
     evt->addCollection( outputTrackerSimHitColls[icol], m_outputTrackerSimHitsCollNames[icol] ) ;
     evt->addCollection( outputTrackerHitRels[icol], m_outputTrackerHitRelNames[icol] ) ;
 
-    streamlog_out( DEBUG5 ) << " output collection " << m_outputTrackerHitsCollNames[icol] << " of type "
-			    << outputTrackerHitColls[icol]->getTypeName() << " added to the event \n"
-			    << " output collection " << m_outputTrackerSimHitsCollNames[icol] << " of type "
-			    << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event \n"
-			    << " output collection " << m_outputTrackerHitRelNames[icol] << " of type "
-			    << outputTrackerHitRels[icol]->getTypeName() << " added to the event  "
-			    << std::endl ;
+    std::cout << "output tracker hit rels collection: " << m_outputTrackerHitRelNames[icol] << " at " << outputTrackerHitRels[icol] << " now has " << (outputTrackerHitRels[icol] ? outputTrackerHitRels[icol]->getNumberOfElements() : 0) << " elements " << std::endl;
 
   } // icol loop
 
