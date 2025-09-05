@@ -71,18 +71,6 @@ class IMarlinTrkSystem;
 typedef std::vector<IHit*> RawTrack;
 
 class DDCellsAutomatonMV : public Processor {
-<<<<<<< HEAD
-  
- public:
- 
-  virtual Processor*  newProcessor() { return new DDCellsAutomatonMV ; }
-  
-  
-  DDCellsAutomatonMV() ;
-  DDCellsAutomatonMV(const DDCellsAutomatonMV&) = delete ;
-  DDCellsAutomatonMV& operator=(const DDCellsAutomatonMV&) = delete ;
-  
-=======
 public:
   virtual Processor* newProcessor() { return new DDCellsAutomatonMV; }
 
@@ -90,7 +78,6 @@ public:
   DDCellsAutomatonMV(const DDCellsAutomatonMV&) = delete;
   DDCellsAutomatonMV& operator=(const DDCellsAutomatonMV&) = delete;
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -119,36 +106,11 @@ protected:
   int _nDivisionsInThetaMV{};
   int _nLayers{};
 
-<<<<<<< HEAD
- protected:
-  int nEvt{};
-
-  int _nDivisionsInPhi{};
-  int _nDivisionsInTheta{};
-  int _nDivisionsInPhiMV{};
-  int _nDivisionsInThetaMV{};
-  int _nLayers{};
-
-=======
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   float _bField{};
 
   // two pi is not a constant in cmath. Calculate it, once!
   static const double TWOPI;
   UTIL::BitField64* _encoder{nullptr};
-<<<<<<< HEAD
-  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
-  int getSideID(TrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
-  int getLayerID(TrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
-  int getModuleID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::module()]; };
-  int getSensorID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::sensor()]; };
-  
-  double _dPhi{};
-  double _dTheta{};
-
-  unsigned int _nLayersVTX{};
-  unsigned int _nLayersSIT{};
-=======
   int getDetectorID(TrackerHit* hit) {
     _encoder->setValue(hit->getCellID0());
     return (*_encoder)[lcio::LCTrackerCellID::subdet()];
@@ -172,7 +134,6 @@ protected:
 
   double _dPhi{};
   double _dTheta{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   unsigned int _nLayersVTX{};
   unsigned int _nLayersSIT{};
@@ -276,17 +237,6 @@ protected:
 
   /** The quality of the output track collection */
   int _output_track_col_quality{};
-<<<<<<< HEAD
-
-  static const int _output_track_col_quality_GOOD;
-  static const int _output_track_col_quality_FAIR;
-  static const int _output_track_col_quality_POOR;
-
-  std::string _bestSubsetFinder{};
-
-} ;
-=======
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   static const int _output_track_col_quality_GOOD;
   static const int _output_track_col_quality_FAIR;

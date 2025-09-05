@@ -113,14 +113,8 @@ double FixedPadSizeDiskLayout::getPadWidth(int padIndex) const {
     // need to return padWidth in radians !!
     return _padWidth / _rows.at(rowNum).RCenter;
 
-<<<<<<< HEAD
-  }
-  catch(std::out_of_range&){
-    return 0. ;
-=======
   } catch (std::out_of_range&) {
     return 0.;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   }
 }
 
@@ -131,14 +125,8 @@ double FixedPadSizeDiskLayout::getPadPitch(int padIndex) const {
     // need to return padPitch in radians !!
     return _rows.at(rowNum).PhiPad;
 
-<<<<<<< HEAD
-  }
-  catch(std::out_of_range&){
-    return 0. ;
-=======
   } catch (std::out_of_range&) {
     return 0.;
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   }
 }
 
