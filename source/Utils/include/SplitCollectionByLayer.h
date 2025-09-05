@@ -1,16 +1,14 @@
 #ifndef SplitCollectionByLayer_h
 #define SplitCollectionByLayer_h 1
 
-#include "marlin/Processor.h"
 #include "marlin/EventModifier.h"
+#include "marlin/Processor.h"
 
 #include "lcio.h"
 #include <string>
 
-
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /** Utility processor that allows to split a collection of Hits into
  *  several collections based on the layer information in the cellID word.
@@ -25,21 +23,19 @@ using namespace marlin ;
  */
 
 class SplitCollectionByLayer : public Processor {
-
 protected:
-
-  ///helper struct
-  struct OutColInfo{
+  /// helper struct
+  struct OutColInfo {
     OutColInfo(const OutColInfo&) = default;
     OutColInfo& operator=(const OutColInfo&) = default;
 
-    std::vector<size_t> layers{} ;
+    std::vector<size_t> layers{};
     LCCollection* collection{nullptr};
     OutColInfo() : layers(std::vector<size_t>(0)), collection(nullptr) {}
   };
 
   /// Enum used for hit types
-  enum HitType{
+  enum HitType {
     SimTrackerHitType = 1,
     TrackerHitType,
     TrackerHitPlaneType,
@@ -48,58 +44,50 @@ protected:
     UnkownType
   };
 
- public:
+public:
+  virtual Processor* newProcessor() { return new SplitCollectionByLayer; }
 
-  virtual Processor*  newProcessor() { return new SplitCollectionByLayer ; }
+  SplitCollectionByLayer();
+  SplitCollectionByLayer(const SplitCollectionByLayer&) = delete;
+  SplitCollectionByLayer& operator=(const SplitCollectionByLayer&) = delete;
 
-
-  SplitCollectionByLayer() ;
-  SplitCollectionByLayer(const SplitCollectionByLayer&) = delete ;
-  SplitCollectionByLayer& operator=(const SplitCollectionByLayer&) = delete ;
-  
-  virtual const std::string & name() const { return Processor::name() ; }
+  virtual const std::string& name() const { return Processor::name(); }
 
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
-  virtual void init() ;
+  virtual void init();
 
   /** Called for every run.
    */
-  virtual void processRunHeader( LCRunHeader* run ) ;
+  virtual void processRunHeader(LCRunHeader* run);
 
   /** Called for every event - the working horse.
    */
-  virtual void processEvent( LCEvent * evt ) ;
+  virtual void processEvent(LCEvent* evt);
 
-
-  virtual void check( LCEvent * evt ) ;
-
+  virtual void check(LCEvent* evt);
 
   /** Called after data processing for clean up.
    */
-  virtual void end() ;
+  virtual void end();
 
-
- protected:
-
+protected:
   ////Input collection name.
-  std::string _colName {};
+  std::string _colName{};
 
   /// Output collections and layers:
-  StringVec  _outColAndLayers {};
+  StringVec _outColAndLayers{};
 
   /// Whether to add empty collections to the event
-  bool _addEmptyCollections{false} ;
+  bool _addEmptyCollections{false};
 
-  std::map<std::string, OutColInfo> _outCols{} ;
+  std::map<std::string, OutColInfo> _outCols{};
 
-  HitType _type {};
+  HitType _type{};
 
-  int _nRun {};
-  int _nEvt {};
-} ;
+  int _nRun{};
+  int _nEvt{};
+};
 
 #endif
-
-
