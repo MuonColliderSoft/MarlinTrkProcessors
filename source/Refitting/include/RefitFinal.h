@@ -15,11 +15,10 @@ class IMarlinTrack;
 } // namespace MarlinTrk
 
 class RefitFinal : public marlin::Processor {
-
   /// Nhits cut struct
-  struct NHitsCut{
-    std::vector<int> detIDs {} ; // list of detectors IDs from which hits will be summed
-    int nHits_min {}; // minimum number of hits
+  struct NHitsCut {
+    std::vector<int> detIDs{}; // list of detectors IDs from which hits will be summed
+    int nHits_min{};           // minimum number of hits
   };
 
 public:
@@ -80,8 +79,8 @@ protected:
   bool _MSOn = true;
   bool _ElossOn = true;
 
-  StringVec  _NHitsCutsStr {};
-  std::vector<NHitsCut> _NHitsCuts {};
+  StringVec _NHitsCutsStr{};
+  std::vector<NHitsCut> _NHitsCuts{};
   double _ReducedChi2Cut = -1.0;
 
   bool _SmoothOn = false;

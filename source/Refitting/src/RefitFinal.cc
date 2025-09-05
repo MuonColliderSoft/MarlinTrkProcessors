@@ -232,10 +232,10 @@ void RefitFinal::processEvent(LCEvent* evt) {
     auto lcioTrkPtr = lcio_trk.release();
 
     // if required apply the ReducedChi2 cut
-    if (_ReducedChi2Cut > 0. && lcioTrkPtr->getChi2()/lcioTrkPtr->getNdf() > _ReducedChi2Cut) {
+    if (_ReducedChi2Cut > 0. && lcioTrkPtr->getChi2() / lcioTrkPtr->getNdf() > _ReducedChi2Cut) {
       streamlog_out(DEBUG5) << "Skip track " << lcioTrkPtr->id() << ": "
-                            << "Chi2/ndof " << lcioTrkPtr->getChi2()/lcioTrkPtr->getNdf() << std::endl;
-      counter++; 
+                            << "Chi2/ndof " << lcioTrkPtr->getChi2() / lcioTrkPtr->getNdf() << std::endl;
+      counter++;
       continue;
     }
 
@@ -251,9 +251,8 @@ void RefitFinal::processEvent(LCEvent* evt) {
     }
 
   } // for loop to the tracks
-  streamlog_out(MESSAGE4) << " Final number of tracks " << trackVec->getNumberOfElements() 
+  streamlog_out(MESSAGE4) << " Final number of tracks " << trackVec->getNumberOfElements()
                           << " Skipped tracks: " << counter << std::endl;
-
 
   evt->addCollection(trackVec, _output_track_col_name);
   if (input_rel_col) {
@@ -299,4 +298,3 @@ int RefitFinal::FitInit2(Track* track, MarlinTrk::IMarlinTrack* marlinTrk) {
 
   return MarlinTrk::IMarlinTrack::success;
 }
-

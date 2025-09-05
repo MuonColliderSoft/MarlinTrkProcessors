@@ -1,8 +1,8 @@
 #ifndef FilterTimeHits_h
 #define FilterTimeHits_h 1
 
-#include "marlin/Processor.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 #include <string>
 #include <vector>
 
@@ -35,47 +35,45 @@ using namespace marlin;
  * @version $Id: FilterTimeHits.h,v 0.1 2021-06-08 08:58:00 fmeloni Exp $
  */
 
-class FilterTimeHits : public Processor
-{
-
+class FilterTimeHits : public Processor {
 public:
-    virtual Processor *newProcessor() { return new FilterTimeHits; }
+  virtual Processor* newProcessor() { return new FilterTimeHits; }
 
-    FilterTimeHits();
-    FilterTimeHits(const FilterTimeHits&) = delete;
-    FilterTimeHits& operator=(const FilterTimeHits&) = delete;
+  FilterTimeHits();
+  FilterTimeHits(const FilterTimeHits&) = delete;
+  FilterTimeHits& operator=(const FilterTimeHits&) = delete;
 
-    virtual void init();
+  virtual void init();
 
-    virtual void processRunHeader(LCRunHeader *run);
+  virtual void processRunHeader(LCRunHeader* run);
 
-    virtual void processEvent(LCEvent *evt);
+  virtual void processEvent(LCEvent* evt);
 
-    virtual void check(LCEvent *evt);
+  virtual void check(LCEvent* evt);
 
-    virtual void end();
+  virtual void end();
 
 protected:
-    // --- Input/output collection names:
-    std::vector<std::string> m_inputTrackerHitsCollNames{};
-    std::vector<std::string> m_inputTrackerSimHitsCollNames{};
-    std::vector<std::string> m_inputTrackerHitRelNames{};
-    std::vector<std::string> m_outputTrackerHitsCollNames{};
-    std::vector<std::string> m_outputTrackerSimHitsCollNames{};
-    std::vector<std::string> m_outputTrackerHitRelNames{};
+  // --- Input/output collection names:
+  std::vector<std::string> m_inputTrackerHitsCollNames{};
+  std::vector<std::string> m_inputTrackerSimHitsCollNames{};
+  std::vector<std::string> m_inputTrackerHitRelNames{};
+  std::vector<std::string> m_outputTrackerHitsCollNames{};
+  std::vector<std::string> m_outputTrackerSimHitsCollNames{};
+  std::vector<std::string> m_outputTrackerHitRelNames{};
 
-    // --- Processor parameters:
-    bool m_fillHistos{};
-    double m_beta{};
-    double m_time_min{};
-    double m_time_max{};
+  // --- Processor parameters:
+  bool m_fillHistos{};
+  double m_beta{};
+  double m_time_min{};
+  double m_time_max{};
 
-    // --- Diagnostic histograms:
-    TH1F *m_corrected_time = nullptr;
+  // --- Diagnostic histograms:
+  TH1F* m_corrected_time = nullptr;
 
-    // --- Run and event counters:
-    int _nRun{};
-    int _nEvt{};
+  // --- Run and event counters:
+  int _nRun{};
+  int _nEvt{};
 };
 
 #endif

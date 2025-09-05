@@ -1,72 +1,67 @@
 #pragma once
 
-#include <marlin/Processor.h>
 #include <TH1F.h>
+#include <marlin/Processor.h>
 
-//#include <ACTSTracking/GeometryIdMappingTool.hxx>
+// #include <ACTSTracking/GeometryIdMappingTool.hxx>
 
-namespace TrackPerf
-{
-}
+namespace TrackPerf {}
 
-class FilterClusters : public marlin::Processor
-{
+class FilterClusters : public marlin::Processor {
 public:
-   virtual Processor* newProcessor() { return new FilterClusters ; }
+  virtual Processor* newProcessor() { return new FilterClusters; }
 
-   FilterClusters(const FilterClusters &) = delete ;
-   FilterClusters& operator =(const FilterClusters &) = delete ;
-   FilterClusters() ;
+  FilterClusters(const FilterClusters&) = delete;
+  FilterClusters& operator=(const FilterClusters&) = delete;
+  FilterClusters();
 
-   /** Called at the begin of the job before anything is read.
-    * Use to initialize the processor, e.g. book histograms.
-    */
-   virtual void init() ;
+  /** Called at the begin of the job before anything is read.
+   * Use to initialize the processor, e.g. book histograms.
+   */
+  virtual void init();
 
-   /** Called for every run.
-    */
-   virtual void processRunHeader( LCRunHeader* run ) ;
+  /** Called for every run.
+   */
+  virtual void processRunHeader(LCRunHeader* run);
 
-   /** Called for every event - the working horse.
-    */
-   virtual void processEvent(LCEvent* evt) ;
+  /** Called for every event - the working horse.
+   */
+  virtual void processEvent(LCEvent* evt);
 
-
-   /** Called after data processing for clean up.
-    */
-   virtual void end() ;
+  /** Called after data processing for clean up.
+   */
+  virtual void end();
 
 private:
-   //! Input track collection
-   std::string _InTrackerHitCollection {};
-   std::string _InRelationCollection {};
-   std::string _InSimTrackerHitCollection {};
+  //! Input track collection
+  std::string _InTrackerHitCollection{};
+  std::string _InRelationCollection{};
+  std::string _InSimTrackerHitCollection{};
 
-   //! Output track collection
-   std::string _OutTrackerHitCollection {};
-   std::string _OutRelationCollection {};
-   std::string _OutSimTrackerHitCollection {};
+  //! Output track collection
+  std::string _OutTrackerHitCollection{};
+  std::string _OutRelationCollection{};
+  std::string _OutSimTrackerHitCollection{};
 
-   //! Ranges for theta
+  //! Ranges for theta
   std::vector<std::string> _ThetaRanges;
 
-   //! Cut-offs for cluster size in various theta ranges
+  //! Cut-offs for cluster size in various theta ranges
   std::vector<std::string> _ClusterSize;
 
   //! Layers to be filtered
   std::vector<std::string> _Layers;
-  
-  //!Number of bins in theta
+
+  //! Number of bins in theta
   std::string _ThetaBins;
 
   bool m_fillHistos{};
 
   // --- Diagnostic histograms:
-  TH1F *m_clusterTheta_beforeCut = nullptr;
-  TH1F *m_clusterTheta_afterCut = nullptr;
-  TH1F *m_clusterLayer_beforeCut = nullptr;
-  TH1F *m_clusterLayer_afterCut = nullptr;
-  TH1F *m_clusterSize_beforeCut = nullptr;
-  TH1F *m_clusterSize_afterCut = nullptr;
-
+  TH1F* m_clusterTheta_beforeCut = nullptr;
+  TH1F* m_clusterTheta_afterCut = nullptr;
+  TH1F* m_clusterLayer_beforeCut = nullptr;
+  TH1F* m_clusterLayer_afterCut = nullptr;
+  TH1F* m_clusterSize_beforeCut = nullptr;
+  TH1F* m_clusterSize_afterCut = nullptr;
 };

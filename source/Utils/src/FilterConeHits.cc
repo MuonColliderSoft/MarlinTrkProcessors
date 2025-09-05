@@ -1,15 +1,15 @@
 #include "FilterConeHits.h"
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <set>
 
 #include <EVENT/MCParticle.h>
 
 #include <IMPL/LCCollectionVec.h>
-#include <IMPL/TrackerHitPlaneImpl.h>
-#include <IMPL/SimTrackerHitImpl.h>
-#include <IMPL/LCRelationImpl.h>
 #include <IMPL/LCFlagImpl.h>
+#include <IMPL/LCRelationImpl.h>
+#include <IMPL/SimTrackerHitImpl.h>
+#include <IMPL/TrackerHitPlaneImpl.h>
 
 #include <marlin/AIDAProcessor.h>
 #include <marlinutil/GeometryUtil.h>
@@ -23,69 +23,44 @@ using namespace marlin;
 
 FilterConeHits aFilterConeHits;
 
-FilterConeHits::FilterConeHits() : Processor("FilterConeHits")
-{
-
+FilterConeHits::FilterConeHits() : Processor("FilterConeHits") {
   // --- Processor description:
 
   _description = "FilterConeHits selects tracker hits in a cone opened around a MC particle direction";
 
   // --- Processor parameters:
 
-  registerProcessorParameter("MCParticleCollection",
-                             "Name of the MCParticle collection",
-                             m_inputMCParticlesCollName,
+  registerProcessorParameter("MCParticleCollection", "Name of the MCParticle collection", m_inputMCParticlesCollName,
                              std::string("MCParticle"));
 
-  registerProcessorParameter("TrackerHitInputCollections",
-                             "Name of the tracker hit input collections",
-                             m_inputTrackerHitsCollNames,
-                             {});
+  registerProcessorParameter("TrackerHitInputCollections", "Name of the tracker hit input collections",
+                             m_inputTrackerHitsCollNames, {});
 
-  registerProcessorParameter("TrackerSimHitInputCollections",
-                             "Name of the tracker simhit input collections",
-                             m_inputTrackerSimHitsCollNames,
-                             {});
+  registerProcessorParameter("TrackerSimHitInputCollections", "Name of the tracker simhit input collections",
+                             m_inputTrackerSimHitsCollNames, {});
 
-  registerProcessorParameter("TrackerHitInputRelations",
-                             "Name of the tracker hit relation collections",
-                             m_inputTrackerHitRelNames,
-                             {});
+  registerProcessorParameter("TrackerHitInputRelations", "Name of the tracker hit relation collections",
+                             m_inputTrackerHitRelNames, {});
 
-  registerProcessorParameter("TrackerHitOutputCollections",
-                             "Name of the tracker hit output collections",
-                             m_outputTrackerHitsCollNames,
-                             {});
+  registerProcessorParameter("TrackerHitOutputCollections", "Name of the tracker hit output collections",
+                             m_outputTrackerHitsCollNames, {});
 
-  registerProcessorParameter("TrackerSimHitOutputCollections",
-                             "Name of the tracker simhit output collections",
-                             m_outputTrackerSimHitsCollNames,
-                             {});
+  registerProcessorParameter("TrackerSimHitOutputCollections", "Name of the tracker simhit output collections",
+                             m_outputTrackerSimHitsCollNames, {});
 
-  registerProcessorParameter("TrackerHitOutputRelations",
-                             "Name of the tracker hit relation collections",
-                             m_outputTrackerHitRelNames,
-                             {});
+  registerProcessorParameter("TrackerHitOutputRelations", "Name of the tracker hit relation collections",
+                             m_outputTrackerHitRelNames, {});
 
-  registerProcessorParameter("DeltaRCut",
-                             "Maximum angular distance between the hits and the particle direction",
-                             m_deltaRCut,
+  registerProcessorParameter("DeltaRCut", "Maximum angular distance between the hits and the particle direction",
+                             m_deltaRCut, double(-1.));
+
+  registerProcessorParameter("Dist3DCut", "Maximum distance between the hits and the extrapolated helix", m_dist3DCut,
                              double(-1.));
 
-  registerProcessorParameter("Dist3DCut",
-                             "Maximum distance between the hits and the extrapolated helix",
-                             m_dist3DCut,
-                             double(-1.));
-
-  registerProcessorParameter("FillHistograms",
-                             "Flag to fill the diagnostic histograms",
-                             m_fillHistos,
-                             false);
+  registerProcessorParameter("FillHistograms", "Flag to fill the diagnostic histograms", m_fillHistos, false);
 }
 
-void FilterConeHits::init()
-{
-
+void FilterConeHits::init() {
   streamlog_out(DEBUG) << "   init called  " << std::endl;
 
   // --- Print the processor parameters:
@@ -113,48 +88,33 @@ void FilterConeHits::init()
   m_pathLength = new TH1F("m_pathLength", "pathlength at the point of closest approach;L [mm]", 1000, 0., 12000.);
 }
 
-void FilterConeHits::processRunHeader(LCRunHeader *)
-{
+void FilterConeHits::processRunHeader(LCRunHeader*) { _nRun++; }
 
-  _nRun++;
-}
-
-void FilterConeHits::processEvent(LCEvent *evt)
-{
-
+void FilterConeHits::processEvent(LCEvent* evt) {
   // --- Check whether the number of input and output collections match
 
   if (m_inputTrackerHitsCollNames.size() != m_inputTrackerSimHitsCollNames.size() ||
-      m_inputTrackerHitsCollNames.size() != m_inputTrackerHitRelNames.size())
-  {
-
+      m_inputTrackerHitsCollNames.size() != m_inputTrackerHitRelNames.size()) {
     std::stringstream err_msg;
-    err_msg << "Mismatch between the reco and sim hits input collections"
-            << std::endl;
+    err_msg << "Mismatch between the reco and sim hits input collections" << std::endl;
 
     throw EVENT::Exception(err_msg.str());
   }
 
   if (m_outputTrackerHitsCollNames.size() != m_outputTrackerSimHitsCollNames.size() ||
-      m_outputTrackerHitsCollNames.size() != m_outputTrackerHitRelNames.size())
-  {
-
+      m_outputTrackerHitsCollNames.size() != m_outputTrackerHitRelNames.size()) {
     std::stringstream err_msg;
-    err_msg << "Mismatch between the reco and sim hits output collections"
-            << std::endl;
+    err_msg << "Mismatch between the reco and sim hits output collections" << std::endl;
 
     throw EVENT::Exception(err_msg.str());
   }
 
   // --- Get the MC particles collection:
 
-  LCCollection *m_inputMCParticles = NULL;
-  try
-  {
+  LCCollection* m_inputMCParticles = NULL;
+  try {
     m_inputMCParticles = evt->getCollection(m_inputMCParticlesCollName);
-  }
-  catch (lcio::DataNotAvailableException &e)
-  {
+  } catch (lcio::DataNotAvailableException& e) {
     streamlog_out(WARNING) << m_inputMCParticlesCollName << " collection not available" << std::endl;
     return;
   }
@@ -162,37 +122,27 @@ void FilterConeHits::processEvent(LCEvent *evt)
   // --- Get the input hit collections and create the corresponding output collections:
 
   const unsigned int nTrackerHitCol = m_inputTrackerHitsCollNames.size();
-  std::vector<LCCollection *> inputHitColls(nTrackerHitCol);
-  std::vector<LCCollection *> inputSimHitColls(nTrackerHitCol);
+  std::vector<LCCollection*> inputHitColls(nTrackerHitCol);
+  std::vector<LCCollection*> inputSimHitColls(nTrackerHitCol);
 
-  std::vector<LCCollectionVec *> outputTrackerHitColls(nTrackerHitCol);
-  std::vector<LCCollectionVec *> outputTrackerSimHitColls(nTrackerHitCol);
-  std::vector<UTIL::LCRelationNavigator *> outputTrackerHitRels(nTrackerHitCol);
+  std::vector<LCCollectionVec*> outputTrackerHitColls(nTrackerHitCol);
+  std::vector<LCCollectionVec*> outputTrackerSimHitColls(nTrackerHitCol);
+  std::vector<UTIL::LCRelationNavigator*> outputTrackerHitRels(nTrackerHitCol);
 
-  for (unsigned int icol = 0; icol < nTrackerHitCol; ++icol)
-  {
-
+  for (unsigned int icol = 0; icol < nTrackerHitCol; ++icol) {
     // get the reco hits
-    try
-    {
+    try {
       inputHitColls[icol] = evt->getCollection(m_inputTrackerHitsCollNames[icol]);
-    }
-    catch (lcio::DataNotAvailableException &e)
-    {
-      streamlog_out(WARNING) << m_inputTrackerHitsCollNames[icol]
-                             << " collection not available" << std::endl;
+    } catch (lcio::DataNotAvailableException& e) {
+      streamlog_out(WARNING) << m_inputTrackerHitsCollNames[icol] << " collection not available" << std::endl;
       continue;
     }
 
     // get the sim hits
-    try
-    {
+    try {
       inputSimHitColls[icol] = evt->getCollection(m_inputTrackerSimHitsCollNames[icol]);
-    }
-    catch (lcio::DataNotAvailableException &e)
-    {
-      streamlog_out(WARNING) << m_inputTrackerSimHitsCollNames[icol]
-                             << " collection not available" << std::endl;
+    } catch (lcio::DataNotAvailableException& e) {
+      streamlog_out(WARNING) << m_inputTrackerSimHitsCollNames[icol] << " collection not available" << std::endl;
       continue;
     }
 
@@ -217,64 +167,57 @@ void FilterConeHits::processEvent(LCEvent *evt)
 
   // Load relations
   std::vector<std::shared_ptr<LCRelationNavigator>> hit2simhits;
-  for (const std::string &name : m_inputTrackerHitRelNames)
-  {
+  for (const std::string& name : m_inputTrackerHitRelNames) {
     // Get the collection of tracker hit relations
-    LCCollection *trackerHitRelationCollection = evt->getCollection(name);
+    LCCollection* trackerHitRelationCollection = evt->getCollection(name);
     if (trackerHitRelationCollection == nullptr)
       continue;
-    std::shared_ptr<LCRelationNavigator> hit2simhit = std::make_shared<LCRelationNavigator>(trackerHitRelationCollection);
+    std::shared_ptr<LCRelationNavigator> hit2simhit =
+        std::make_shared<LCRelationNavigator>(trackerHitRelationCollection);
     hit2simhits.push_back(hit2simhit);
   }
 
   // --- Loop over the MC particles:
-  for (int ipart = 0; ipart < m_inputMCParticles->getNumberOfElements(); ++ipart)
-  {
-
-    MCParticle *part = dynamic_cast<MCParticle *>(m_inputMCParticles->getElementAt(ipart));
+  for (int ipart = 0; ipart < m_inputMCParticles->getNumberOfElements(); ++ipart) {
+    MCParticle* part = dynamic_cast<MCParticle*>(m_inputMCParticles->getElementAt(ipart));
 
     // --- Keep only the generator-level particles:
     if (part->getGeneratorStatus() != 1)
       continue;
 
-    double part_p = sqrt(part->getMomentum()[0] * part->getMomentum()[0] +
-                         part->getMomentum()[1] * part->getMomentum()[1] +
-                         part->getMomentum()[2] * part->getMomentum()[2]);
+    double part_p =
+        sqrt(part->getMomentum()[0] * part->getMomentum()[0] + part->getMomentum()[1] * part->getMomentum()[1] +
+             part->getMomentum()[2] * part->getMomentum()[2]);
 
     HelixClass_double helix;
-    helix.Initialize_VP((double *)part->getVertex(), (double *)part->getMomentum(),
-                        (double)part->getCharge(), m_magneticField);
+    helix.Initialize_VP((double*)part->getVertex(), (double*)part->getMomentum(), (double)part->getCharge(),
+                        m_magneticField);
 
     // --- Get the intersection point with the barrel outer cylinder.
     //     N.B.: If the particle spirals and doesn't reach the tracker outer cylinder,
     //           getPointOnCircle returns -1e20.
 
     double intersectionPoint[3] = {0., 0., 0.};
-    double intersectionTime = helix.getPointOnCircle(trackerOuterRadius, (double *)part->getVertex(), intersectionPoint);
+    double intersectionTime = helix.getPointOnCircle(trackerOuterRadius, (double*)part->getVertex(), intersectionPoint);
 
     // --- Loop over the tracker hits and select hits inside a cone around the particle trajectory:
 
-    for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol)
-    {
-
-      LCCollection *hit_col = inputHitColls[icol];
+    for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol) {
+      LCCollection* hit_col = inputHitColls[icol];
       if (!hit_col)
         continue;
 
-      for (int ihit = 0; ihit < hit_col->getNumberOfElements(); ++ihit)
-      {
-
-        TrackerHitPlane *hit = dynamic_cast<TrackerHitPlane *>(hit_col->getElementAt(ihit));
+      for (int ihit = 0; ihit < hit_col->getNumberOfElements(); ++ihit) {
+        TrackerHitPlane* hit = dynamic_cast<TrackerHitPlane*>(hit_col->getElementAt(ihit));
 
         // --- Skip hits that are in the opposite hemisphere w.r.t. the MC particle direction
-        if ((hit->getPosition()[0] * part->getMomentum()[0] +
-             hit->getPosition()[1] * part->getMomentum()[1] +
+        if ((hit->getPosition()[0] * part->getMomentum()[0] + hit->getPosition()[1] * part->getMomentum()[1] +
              hit->getPosition()[2] * part->getMomentum()[2]) < 0.)
           continue;
 
         // --- Get the distance between the hit and the particle trajectory:
         double hit_distance[3] = {0., 0., 0.};
-        double timeAtPCA = helix.getDistanceToPoint((double *)hit->getPosition(), hit_distance);
+        double timeAtPCA = helix.getDistanceToPoint((double*)hit->getPosition(), hit_distance);
 
         // --- Exclude the opposite side of the helix w.r.t. the production vertex :
         if (timeAtPCA < 0.)
@@ -287,9 +230,7 @@ void FilterConeHits::processEvent(LCEvent *evt)
         double pathLength = part_p * timeAtPCA;
         double hit_angle = atan2(hit_distance[2], pathLength);
 
-        if (m_fillHistos)
-        {
-
+        if (m_fillHistos) {
           m_distXY->Fill(hit_distance[0]);
           m_distZ->Fill(hit_distance[1]);
           m_dist3D->Fill(hit_distance[2]);
@@ -300,26 +241,22 @@ void FilterConeHits::processEvent(LCEvent *evt)
 
         bool save = false;
 
-        if (m_deltaRCut > 0.)
-        {
+        if (m_deltaRCut > 0.) {
           if (hit_angle < m_deltaRCut)
             save = true;
         }
 
-        if (m_dist3DCut > 0.)
-        {
+        if (m_dist3DCut > 0.) {
           if (hit_distance[2] < m_dist3DCut)
             save = true;
         }
 
-        if (save)
-        {
+        if (save) {
           // Find the sim hit
-          SimTrackerHit *simhit = nullptr;
-          const LCObjectVec &simHitVector = hit2simhits[icol]->getRelatedToObjects(hit);
-          if (!simHitVector.empty())
-          { // Found the sim hit
-            simhit = dynamic_cast<SimTrackerHit *>(simHitVector.at(0));
+          SimTrackerHit* simhit = nullptr;
+          const LCObjectVec& simHitVector = hit2simhits[icol]->getRelatedToObjects(hit);
+          if (!simHitVector.empty()) { // Found the sim hit
+            simhit = dynamic_cast<SimTrackerHit*>(simHitVector.at(0));
 
             outputTrackerSimHitColls[icol]->addElement(simhit);
             outputTrackerHitColls[icol]->addElement(hit);
@@ -333,8 +270,7 @@ void FilterConeHits::processEvent(LCEvent *evt)
 
   } // ipart loop
 
-  for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol)
-  {
+  for (unsigned int icol = 0; icol < inputHitColls.size(); ++icol) {
     // Save output track collection
     evt->addCollection(outputTrackerHitColls[icol], m_outputTrackerHitsCollNames[icol]);
     evt->addCollection(outputTrackerSimHitColls[icol], m_outputTrackerSimHitsCollNames[icol]);
@@ -343,25 +279,19 @@ void FilterConeHits::processEvent(LCEvent *evt)
     streamlog_out(DEBUG5) << " output collection " << m_outputTrackerHitsCollNames[icol] << " of type "
                           << outputTrackerHitColls[icol]->getTypeName() << " added to the event \n"
                           << " output collection " << m_outputTrackerSimHitsCollNames[icol] << " of type "
-                          << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event "
-                          << std::endl;
+                          << outputTrackerSimHitColls[icol]->getTypeName() << " added to the event " << std::endl;
 
   } // icol loop
 
-  streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber()
-                       << "   in run:  " << evt->getRunNumber() << std::endl;
+  streamlog_out(DEBUG) << "   processing event: " << evt->getEventNumber() << "   in run:  " << evt->getRunNumber()
+                       << std::endl;
 
   _nEvt++;
 }
 
-void FilterConeHits::check(LCEvent *)
-{
-}
+void FilterConeHits::check(LCEvent*) {}
 
-void FilterConeHits::end()
-{
-
-  std::cout << "FilterConeHits::end()  " << name()
-            << " processed " << _nEvt << " events in " << _nRun << " runs "
+void FilterConeHits::end() {
+  std::cout << "FilterConeHits::end()  " << name() << " processed " << _nEvt << " events in " << _nRun << " runs "
             << std::endl;
 }
