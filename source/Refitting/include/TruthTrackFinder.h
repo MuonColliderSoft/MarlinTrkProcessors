@@ -23,17 +23,6 @@ using namespace marlin;
 using namespace AIDA;
 
 class TruthTrackFinder : public Processor {
-<<<<<<< HEAD
-		
- public:
-	
-  virtual Processor*  newProcessor() { return new TruthTrackFinder ; }
-	
-  TruthTrackFinder() ;
-  TruthTrackFinder(const TruthTrackFinder&) = delete ;
-  TruthTrackFinder& operator=(const TruthTrackFinder&) = delete ;
-	
-=======
 public:
   virtual Processor* newProcessor() { return new TruthTrackFinder; }
 
@@ -41,7 +30,6 @@ public:
   TruthTrackFinder(const TruthTrackFinder&) = delete;
   TruthTrackFinder& operator=(const TruthTrackFinder&) = delete;
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   // Initialisation - run at the beginning to start histograms, etc.
   virtual void init();
 
@@ -80,21 +68,6 @@ protected:
   void removeHitsSameLayer(const std::vector<TrackerHit*>&, std::vector<TrackerHit*>&);
 
   // Collection names for (in/out)put
-<<<<<<< HEAD
-  std::vector<std::string> m_inputTrackerHitCollections {};
-  std::vector<std::string> m_inputTrackerHitRelationCollections {};
-  std::string m_inputParticleCollection {};
-  std::string m_outputTrackCollection {};
-  std::string m_outputTrackRelationCollection{};
-
-  bool m_useTruthInPrefit{};
-  bool m_fitForward{};
- 	
-  // Run and event counters
-  int m_eventNumber {};
-  int m_runNumber {};
-  
-=======
   std::vector<std::string> m_inputTrackerHitCollections{};
   std::vector<std::string> m_inputTrackerHitRelationCollections{};
   std::string m_inputParticleCollection{};
@@ -108,7 +81,6 @@ protected:
   int m_eventNumber{};
   int m_runNumber{};
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   // Track fit factory
   MarlinTrk::IMarlinTrkSystem* trackFactory{nullptr};
 
@@ -121,12 +93,6 @@ protected:
   double m_maxChi2perHit{};
   double m_magneticField{};
   int m_fitFails{};
-<<<<<<< HEAD
-
-		
-} ;
-=======
 };
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
 #endif

@@ -74,23 +74,12 @@ class IMarlinTrkSystem;
  */
 class TruthTracker : public marlin::Processor {
 public:
-<<<<<<< HEAD
-  
-  virtual marlin::Processor*  newProcessor() { return new TruthTracker ; }
-  
-  
-  TruthTracker() ;
-  TruthTracker(const TruthTracker&) = delete ;
-  TruthTracker& operator=(const TruthTracker&) = delete ;
-  
-=======
   virtual marlin::Processor* newProcessor() { return new TruthTracker; }
 
   TruthTracker();
   TruthTracker(const TruthTracker&) = delete;
   TruthTracker& operator=(const TruthTracker&) = delete;
 
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   /** Called at the begin of the job before anything is read.
    * Use to initialize the processor, e.g. book histograms.
    */
@@ -124,18 +113,6 @@ public:
   };
 
 protected:
-<<<<<<< HEAD
-  
-  
-  const LCObjectVec* getSimHits( TrackerHit* trkhit, const FloatVec* weights = NULL);
-  
-  UTIL::BitField64* _encoder{nullptr};
-  int getDetectorID(TrackerHit* hit) { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::subdet()]; }
-  int getSideID(TrackerHit* hit)     { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::side()]; };
-  int getLayerID(TrackerHit* hit)    { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::layer()]; };
-  int getModuleID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::module()]; };
-  int getSensorID(TrackerHit* hit)   { _encoder->setValue(hit->getCellID0()); return (*_encoder)[lcio::LCTrackerCellID::sensor()]; };
-=======
   const LCObjectVec* getSimHits(TrackerHit* trkhit, const FloatVec* weights = NULL);
 
   UTIL::BitField64* _encoder{nullptr};
@@ -159,7 +136,6 @@ protected:
     _encoder->setValue(hit->getCellID0());
     return (*_encoder)[lcio::LCTrackerCellID::sensor()];
   };
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
   /** helper function to get collection using try catch block */
   LCCollection* GetCollection(LCEvent* evt, std::string colName);
@@ -182,29 +158,6 @@ protected:
 
   /** input MCParticle collection
    */
-<<<<<<< HEAD
-  std::string  _colNameMCParticles{};
-  
-  /** input TrackerHit collections
-   */
-  std::vector< std::string > _colNamesTrackerHits{};
- 
-  /** input relation collections 
-   */
-  std::vector< std::string > _colNamesTrackerHitRelations{};
-
-  std::vector< LCCollection* > _colTrackerHits{};
-  std::vector< LCRelationNavigator* > _navTrackerHitRel{};
-  
-  /** output track collection 
-   */
-  std::string _output_track_col_name {};
-  LCCollectionVec* _trackVec{nullptr};
-  
-  /** Output track relations
-   */
-  std::string _output_track_rel_name {};
-=======
   std::string _colNameMCParticles{};
 
   /** input TrackerHit collections
@@ -226,33 +179,10 @@ protected:
   /** Output track relations
    */
   std::string _output_track_rel_name{};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   LCCollectionVec* _trackRelVec{nullptr};
 
   /** output track segments collection, used for tracks which cannot be formed from a single fit
    */
-<<<<<<< HEAD
-  std::string _output_track_segments_col_name {};
-  LCCollectionVec* _trackSegmentsVec{nullptr};
-  
-  /** Output track segments relations, used for tracks which cannot be formed from a single fit
-   */
-  std::string _output_track_segment_rel_name {};
-  LCCollectionVec* _trackSegmentsRelVec{nullptr};
-  
-  int _nMCP{};
-  
-  int _n_run {};
-  int _n_evt {};
-  
-  float _MCpThreshold {};
-
-  bool _useMCParticleParametersFotInitOfFit{};
-  
-  /** pointer to the IMarlinTrkSystem instance 
-   */
-  MarlinTrk::IMarlinTrkSystem* _trksystem {nullptr};
-=======
   std::string _output_track_segments_col_name{};
   LCCollectionVec* _trackSegmentsVec{nullptr};
 
@@ -273,44 +203,11 @@ protected:
   /** pointer to the IMarlinTrkSystem instance
    */
   MarlinTrk::IMarlinTrkSystem* _trksystem{nullptr};
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
   bool _runMarlinTrkDiagnostics{};
   std::string _MarlinTrkDiagnosticsName{};
 
   bool _FitTracksWithMarlinTrk{};
   bool _create_prefit_using_MarlinTrk{};
-<<<<<<< HEAD
-    
-  bool _MSOn {};
-  bool _ElossOn {};
-  bool _SmoothOn {};
-
-  float _initialTrackError_d0{};
-  float _initialTrackError_phi0{};
-  float _initialTrackError_omega{};
-  float _initialTrackError_z0{};
-  float _initialTrackError_tanL{};
-
-  bool  _UseIterativeFitting{};
-  bool  _UseEventDisplay{};
-  
-  double _maxChi2PerHit{};
-    
-  double _Bz{};
-
-  unsigned _nCreatedTracks{};
-  
-  EVENT::LCEvent* _current_event{nullptr};
-  
-  int _detector_model_for_drawing{};
-  std::vector<int> _colours{};
-  float     _helix_max_r{};
-  
-  std::string _trkSystemName {};
-
-  int _fitDirection {};
-} ;
-=======
 
   bool _MSOn{};
   bool _ElossOn{};
@@ -341,6 +238,5 @@ protected:
 
   int _fitDirection{};
 };
->>>>>>> 665b5fed8309e84cc4197b80012c02c680e32b90
 
 #endif
