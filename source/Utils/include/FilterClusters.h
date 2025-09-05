@@ -44,16 +44,16 @@ private:
   std::string _OutSimTrackerHitCollection{};
 
   //! Ranges for theta
-  std::vector<std::string> _ThetaRanges;
+  std::vector<std::string> _ThetaRanges{};
 
   //! Cut-offs for cluster size in various theta ranges
-  std::vector<std::string> _ClusterSize;
+  std::vector<std::string> _ClusterSize{};
 
   //! Layers to be filtered
-  std::vector<std::string> _Layers;
+  std::vector<std::string> _Layers{};
 
   //! Number of bins in theta
-  std::string _ThetaBins;
+  std::string _ThetaBins{};
 
   bool m_fillHistos{};
 
