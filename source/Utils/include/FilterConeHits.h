@@ -24,7 +24,7 @@ using namespace marlin;
  *  @parameter TrackerHitOutputRelations name of the tracker hit relation output collections
  *  @parameter DeltaRCut maximum angular distance between the hits and the particle direction
  *  @parameter FillHistograms flag to fill the diagnostic histograms
- *  @parameter ConeAroundStatus list of Pythia generator statuses that we can choose to cone around
+ *  @parameter ConeAroundStatus list of generator statuses that we can choose to cone around
  *
  * @author M. Casarsa, INFN Trieste
  * @date  22 January 2021
