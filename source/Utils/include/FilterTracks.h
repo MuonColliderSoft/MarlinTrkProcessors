@@ -106,6 +106,9 @@ private:
    float _MaxSigPhi = 999;
    float _MaxSigQoverP = 999;
 
+   float _MaxD0 = 999.;
+   float _MaxZ0 = 999.;
+
    //! NN parameters
    std::string _NNmethod = ""; // if defined apply the NN
    std::string _NNweights = ""; // xml file with weights
