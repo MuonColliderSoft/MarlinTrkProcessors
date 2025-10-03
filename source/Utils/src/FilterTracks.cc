@@ -140,6 +140,12 @@ FilterTracks::FilterTracks()
           _MaxSigQoverP
         );
 
+  registerProcessorParameter("MaxReducedChi2",
+          "Max reduced Chi2",
+          _MaxReducedChi2,
+          _MaxReducedChi2
+        );
+
   registerProcessorParameter("MaxPromptD0",
           "Max d0",
           _MaxD0,
@@ -263,6 +269,7 @@ void FilterTracks::processEvent( LCEvent * evt )
     {"tr_sigtheta",0},
     {"tr_sigphi",0},
     {"tr_sigqoverp",0},
+    {"tr_redchi2",0},
     {"tr_d0",0},
     {"tr_z0",0}
   };
@@ -294,6 +301,7 @@ void FilterTracks::processEvent( LCEvent * evt )
     vars["trch2"] = trk->getChi2();
 
     vars["trndf"] = trk->getNdf();
+    vars["tr_redchi2"] = vars["trch2"] / vars["trndf"];
     vars["trnoh"] = (vars["trtnh"]-vars["trndf"]/2) / vars["trtnh"];
     vars["tr_sigd0"] = sqrt(trk->getCovMatrix()[0]);
     vars["tr_sigz0"] = sqrt(trk->getCovMatrix()[2]);
@@ -330,6 +338,7 @@ void FilterTracks::processEvent( LCEvent * evt )
             theta          < _MaxTheta    &&
 	          vars["trch2"]  > _Chi2Spatial &&
             vars["trndf"]  > _MinNdf      &&
+            vars["tr_redchi2"]  < _MaxReducedChi2  &&
             vars["trtnh"]-vars["trndf"]/2 < _MaxOutl &&
             vars["trnoh"] < _MaxOutlOverHits &&
             vars["trthn"]  < _MaxHoles    &&

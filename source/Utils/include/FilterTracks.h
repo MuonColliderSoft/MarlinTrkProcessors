@@ -89,6 +89,7 @@ private:
 
    //! Cut off for the value ndf
    int _MinNdf = 1;
+   float _MaxReducedChi2 = 1.e20;
 
    //! Cut off for outliers number   
    int _MaxOutl = 10;  
