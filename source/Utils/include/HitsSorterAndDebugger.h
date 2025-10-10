@@ -5,7 +5,7 @@
 #include <EVENT/TrackerHit.h>
 #include <IMPL/TrackerHitPlaneImpl.h>
 
-//CxxUtils
+// CxxUtils
 #include "fpcompare.h"
 
 // sorting by value of R(=x^2+y^2) in global coordinated so the hits are always
@@ -32,8 +32,8 @@ inline void printHits(const TrackerHitVec& hitVector) {
   for (int itHit = 0; itHit < nHits; itHit++) {
     // Get the tracker hit and print global coordinates of the hit
     TrackerHitPlane* hit = static_cast<TrackerHitPlane*>(hitVector.at(itHit));
-    streamlog_out(DEBUG5) << " Hit #" << itHit << ", (x,y,z) = (" << hit->getPosition()[0] << "," << hit->getPosition()[1]
-                          << "," << hit->getPosition()[2] << ")" << std::endl;
+    streamlog_out(DEBUG5) << " Hit #" << itHit << ", (x,y,z) = (" << hit->getPosition()[0] << ","
+                          << hit->getPosition()[1] << "," << hit->getPosition()[2] << ")" << std::endl;
   }
   return;
 }

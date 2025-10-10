@@ -5,11 +5,11 @@
 #include <marlin/Global.h>
 #include <marlin/VerbosityLevels.h>
 
+#include "MarlinTrk/IMarlinTrkSystem.h"
+#include "MarlinTrk/MarlinTrkDiagnostics.h"
 #include <MarlinTrk/Factory.h>
 #include <MarlinTrk/IMarlinTrack.h>
 #include <MarlinTrk/MarlinTrkUtils.h>
-#include "MarlinTrk/IMarlinTrkSystem.h"
-#include "MarlinTrk/MarlinTrkDiagnostics.h"
 
 #include <marlinutil/GeometryUtil.h>
 
@@ -64,13 +64,14 @@ ClonesAndSplitTracksFinder::ClonesAndSplitTracksFinder() : Processor("ClonesAndS
 
   registerProcessorParameter("minTrackPt", "minimum track pt for merging (in GeV/c)", _minPt, double(1.0));
 
-  registerProcessorParameter("maxSignificanceTheta", "maximum significance separation in tanLambda", _maxSignificanceTheta,
-                             double(3.0));
+  registerProcessorParameter("maxSignificanceTheta", "maximum significance separation in tanLambda",
+                             _maxSignificanceTheta, double(3.0));
 
   registerProcessorParameter("maxSignificancePhi", "maximum significance separation in phi", _maxSignificancePhi,
                              double(3.0));
 
-  registerProcessorParameter("maxSignificancePt", "maximum significance separation in pt", _maxSignificancePt, double(2.0));
+  registerProcessorParameter("maxSignificancePt", "maximum significance separation in pt", _maxSignificancePt,
+                             double(2.0));
 
   registerProcessorParameter("mergeSplitTracks", "if true, the merging of split tracks is performed", _mergeSplitTracks,
                              bool(false));
@@ -97,12 +98,12 @@ void ClonesAndSplitTracksFinder::init() {
   _trksystem->init();
 
   // Put default values for track fitting
-  _initialTrackError_d0    = 1.e6;
-  _initialTrackError_phi0  = 1.e2;
+  _initialTrackError_d0 = 1.e6;
+  _initialTrackError_phi0 = 1.e2;
   _initialTrackError_omega = 1.e-4;
-  _initialTrackError_z0    = 1.e6;
-  _initialTrackError_tanL  = 1.e2;
-  _maxChi2perHit           = 1.e2;
+  _initialTrackError_z0 = 1.e6;
+  _initialTrackError_tanL = 1.e2;
+  _maxChi2perHit = 1.e2;
 
   _n_run = 0;
   _n_evt = 0;
@@ -112,8 +113,8 @@ void ClonesAndSplitTracksFinder::processRunHeader(LCRunHeader*) { ++_n_run; }
 
 void ClonesAndSplitTracksFinder::processEvent(LCEvent* evt) {
   // set the correct configuration for the tracking system for this event
-  MarlinTrk::TrkSysConfig<MarlinTrk::IMarlinTrkSystem::CFG::useQMS>       mson(_trksystem, _MSOn);
-  MarlinTrk::TrkSysConfig<MarlinTrk::IMarlinTrkSystem::CFG::usedEdx>      elosson(_trksystem, _ElossOn);
+  MarlinTrk::TrkSysConfig<MarlinTrk::IMarlinTrkSystem::CFG::useQMS> mson(_trksystem, _MSOn);
+  MarlinTrk::TrkSysConfig<MarlinTrk::IMarlinTrkSystem::CFG::usedEdx> elosson(_trksystem, _ElossOn);
   MarlinTrk::TrkSysConfig<MarlinTrk::IMarlinTrkSystem::CFG::useSmoothing> smoothon(_trksystem, _SmoothOn);
 
   ++_n_evt;
@@ -184,9 +185,9 @@ LCCollection* ClonesAndSplitTracksFinder::GetCollection(LCEvent* evt, std::strin
 
 // Function to check if two KDtracks contain several hits in common
 int ClonesAndSplitTracksFinder::overlappingHits(const Track* track1, const Track* track2) {
-  int                        nHitsInCommon = 0;
-  const EVENT::TrackerHitVec trackVec1     = track1->getTrackerHits();
-  const EVENT::TrackerHitVec trackVec2     = track2->getTrackerHits();
+  int nHitsInCommon = 0;
+  const EVENT::TrackerHitVec trackVec1 = track1->getTrackerHits();
+  const EVENT::TrackerHitVec trackVec2 = track2->getTrackerHits();
   for (size_t hit = 0; hit < trackVec1.size(); hit++) {
     if (std::find(trackVec2.begin(), trackVec2.end(), trackVec1.at(hit)) != trackVec2.end())
       nHitsInCommon++;
@@ -196,31 +197,31 @@ int ClonesAndSplitTracksFinder::overlappingHits(const Track* track1, const Track
 
 void ClonesAndSplitTracksFinder::fromTrackToTrackImpl(const Track* track, TrackImpl*& trackFinal) {
   const TrackState* ts_atOther = 0;
-  ts_atOther                   = track->getTrackState(TrackState::AtOther);
+  ts_atOther = track->getTrackState(TrackState::AtOther);
   if (ts_atOther)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atOther));
   const TrackState* ts_atIP = 0;
-  ts_atIP                   = track->getTrackState(TrackState::AtIP);
+  ts_atIP = track->getTrackState(TrackState::AtIP);
   if (ts_atIP)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atIP));
   const TrackState* ts_atFirstHit = 0;
-  ts_atFirstHit                   = track->getTrackState(TrackState::AtFirstHit);
+  ts_atFirstHit = track->getTrackState(TrackState::AtFirstHit);
   if (ts_atFirstHit)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atFirstHit));
   const TrackState* ts_atLastHit = 0;
-  ts_atLastHit                   = track->getTrackState(TrackState::AtLastHit);
+  ts_atLastHit = track->getTrackState(TrackState::AtLastHit);
   if (ts_atLastHit)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atLastHit));
   const TrackState* ts_atCalorimeter = 0;
-  ts_atCalorimeter                   = track->getTrackState(TrackState::AtCalorimeter);
+  ts_atCalorimeter = track->getTrackState(TrackState::AtCalorimeter);
   if (ts_atCalorimeter)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atCalorimeter));
   const TrackState* ts_atVertex = 0;
-  ts_atVertex                   = track->getTrackState(TrackState::AtVertex);
+  ts_atVertex = track->getTrackState(TrackState::AtVertex);
   if (ts_atVertex)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atVertex));
   const TrackState* ts_atLastLocation = 0;
-  ts_atLastLocation                   = track->getTrackState(TrackState::LastLocation);
+  ts_atLastLocation = track->getTrackState(TrackState::LastLocation);
   if (ts_atLastLocation)
     trackFinal->addTrackState(new TrackStateImpl(*ts_atLastLocation));
 
@@ -232,6 +233,7 @@ void ClonesAndSplitTracksFinder::fromTrackToTrackImpl(const Track* track, TrackI
   trackFinal->setNdf(track->getNdf());
   trackFinal->setdEdx(track->getdEdx());
   trackFinal->setdEdxError(track->getdEdxError());
+  trackFinal->subdetectorHitNumbers() = track->getSubdetectorHitNumbers();
 }
 
 void ClonesAndSplitTracksFinder::removeClones(EVENT::TrackVec& tracksWithoutClones, LCCollection*& input_track_col) {
@@ -242,17 +244,17 @@ void ClonesAndSplitTracksFinder::removeClones(EVENT::TrackVec& tracksWithoutClon
 
   std::multimap<int, std::pair<int, Track*>> candidateClones;
 
-  for (int iTrack = 0; iTrack < nTracks; ++iTrack) {  // first loop over tracks
-    int    countClones = 0;
-    Track* track_i     = static_cast<Track*>(input_track_col->getElementAt(iTrack));
+  for (int iTrack = 0; iTrack < nTracks; ++iTrack) { // first loop over tracks
+    int countClones = 0;
+    Track* track_i = static_cast<Track*>(input_track_col->getElementAt(iTrack));
 
-    for (int jTrack = 0; jTrack < nTracks; ++jTrack) {  // second loop over tracks
+    for (int jTrack = 0; jTrack < nTracks; ++jTrack) { // second loop over tracks
 
       Track* track_j = static_cast<Track*>(input_track_col->getElementAt(jTrack));
-      if (track_i != track_j) {  // track1 != track2
+      if (track_i != track_j) { // track1 != track2
 
         const unsigned int nOverlappingHits = overlappingHits(track_i, track_j);
-        if (nOverlappingHits >= 2) {  // clones
+        if (nOverlappingHits >= 2) { // clones
           countClones++;
           Track* bestTrack;
           bestInClones(track_i, track_j, nOverlappingHits, bestTrack);
@@ -262,18 +264,19 @@ void ClonesAndSplitTracksFinder::removeClones(EVENT::TrackVec& tracksWithoutClon
         }
       }
 
-    }  // end second track loop
+    } // end second track loop
 
     if (countClones == 0) {
       tracksWithoutClones.push_back(track_i);
     }
 
-  }  // end first track loop
+  } // end first track loop
 
   filterClonesAndMergedTracks(candidateClones, input_track_col, tracksWithoutClones, true);
 }
 
-void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVec>& trackVec, LCCollection*& input_track_col,
+void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVec>& trackVec,
+                                                  LCCollection*& input_track_col,
                                                   EVENT::TrackVec& tracksWithoutClones) {
   streamlog_out(DEBUG8) << "ClonesAndSplitTracksFinder::mergeSplitTracks " << std::endl;
 
@@ -281,19 +284,19 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
   std::set<int> iter_duplicates;
 
   for (UInt_t iTrack = 0; iTrack < tracksWithoutClones.size(); ++iTrack) {
-    int    countMergingPartners = 0;
-    bool   toBeMerged           = false;
-    Track* track_i              = static_cast<Track*>(tracksWithoutClones.at(iTrack));
+    int countMergingPartners = 0;
+    bool toBeMerged = false;
+    Track* track_i = static_cast<Track*>(tracksWithoutClones.at(iTrack));
 
-    double pt_i    = 0.3 * _magneticField / (fabs(track_i->getOmega()) * 1000.);
+    double pt_i = 0.3 * _magneticField / (fabs(track_i->getOmega()) * 1000.);
     double theta_i = (M_PI / 2 - atan(track_i->getTanLambda())) * 180. / M_PI;
-    double phi_i   = track_i->getPhi() * 180. / M_PI;
+    double phi_i = track_i->getPhi() * 180. / M_PI;
 
-    //Merge only tracks with min pt
-    //Try to avoid merging loopers for now
+    // Merge only tracks with min pt
+    // Try to avoid merging loopers for now
     if (pt_i < _minPt) {
-      streamlog_out(DEBUG5) << " Track #" << iTrack << ": pt = " << pt_i << ", theta = " << theta_i << ", phi = " << phi_i
-                            << std::endl;
+      streamlog_out(DEBUG5) << " Track #" << iTrack << ": pt = " << pt_i << ", theta = " << theta_i
+                            << ", phi = " << phi_i << std::endl;
       streamlog_out(DEBUG5) << " Track #" << iTrack << " does not fulfil min pt requirement." << std::endl;
       streamlog_out(DEBUG5) << " TRACK STORED" << std::endl;
 
@@ -304,17 +307,17 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
     }
 
     for (UInt_t jTrack = iTrack + 1; jTrack < tracksWithoutClones.size(); ++jTrack) {
-      Track* track_j        = static_cast<Track*>(tracksWithoutClones.at(jTrack));
-      bool   isCloseInTheta = false, isCloseInPhi = false, isCloseInPt = false;
+      Track* track_j = static_cast<Track*>(tracksWithoutClones.at(jTrack));
+      bool isCloseInTheta = false, isCloseInPhi = false, isCloseInPt = false;
 
       if (track_j != track_i) {
-        double pt_j    = 0.3 * _magneticField / (fabs(track_j->getOmega() * 1000.));
+        double pt_j = 0.3 * _magneticField / (fabs(track_j->getOmega() * 1000.));
         double theta_j = (M_PI / 2 - atan(track_j->getTanLambda())) * 180. / M_PI;
-        double phi_j   = track_j->getPhi() * 180. / M_PI;
-        streamlog_out(DEBUG5) << " Track #" << iTrack << ": pt = " << pt_i << ", theta = " << theta_i << ", phi = " << phi_i
-                              << std::endl;
-        streamlog_out(DEBUG5) << " Track #" << jTrack << ": pt = " << pt_j << ", theta = " << theta_j << ", phi = " << phi_j
-                              << std::endl;
+        double phi_j = track_j->getPhi() * 180. / M_PI;
+        streamlog_out(DEBUG5) << " Track #" << iTrack << ": pt = " << pt_i << ", theta = " << theta_i
+                              << ", phi = " << phi_i << std::endl;
+        streamlog_out(DEBUG5) << " Track #" << jTrack << ": pt = " << pt_j << ", theta = " << theta_j
+                              << ", phi = " << phi_j << std::endl;
 
         if (pt_j < _minPt) {
           streamlog_out(DEBUG5) << " Track #" << jTrack << " does not fulfil min pt requirement. Skip. " << std::endl;
@@ -322,8 +325,8 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
         }
 
         double significanceTanLambda = calculateSignificanceTanLambda(track_i, track_j);
-        double significancePhi       = calculateSignificancePhi(track_i, track_j);
-        double significancePt        = calculateSignificancePt(track_i, track_j);
+        double significancePhi = calculateSignificancePhi(track_i, track_j);
+        double significancePt = calculateSignificancePt(track_i, track_j);
 
         streamlog_out(DEBUG5) << " -> tanLambda significance = " << significanceTanLambda << " with cut at "
                               << _maxSignificanceTheta << std::endl;
@@ -355,7 +358,8 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
 
         toBeMerged = isCloseInTheta && isCloseInPhi && isCloseInPt;
 
-        if (toBeMerged) {  // merging, refitting, storing in a container of mergingCandidates (multimap <*track1, pair<*track2,*trackMerged>>)
+        if (toBeMerged) { // merging, refitting, storing in a container of mergingCandidates (multimap <*track1,
+                          // pair<*track2,*trackMerged>>)
           EVENT::Track* lcioTrkPtr = nullptr;
           mergeAndFit(track_i, track_j, lcioTrkPtr);
           if (not lcioTrkPtr) {
@@ -365,16 +369,16 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
           countMergingPartners++;
           iter_duplicates.insert(iTrack);
           iter_duplicates.insert(jTrack);
-        } else {  // no merging conditions met
+        } else { // no merging conditions met
           continue;
         }
       }
 
-    }  // end loop on jTracks
+    } // end loop on jTracks
 
     // Track was already found as duplicate
     const bool is_in = iter_duplicates.find(iTrack) != iter_duplicates.end();
-    if (countMergingPartners == 0 && !is_in) {  // if track_i has no merging partner, store it in the output vec
+    if (countMergingPartners == 0 && !is_in) { // if track_i has no merging partner, store it in the output vec
       streamlog_out(DEBUG5) << " Track #" << iTrack << " has no merging partners, so TRACK STORED." << std::endl;
 
       TrackImpl* trackFinal = new TrackImpl;
@@ -388,7 +392,7 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
       streamlog_out(DEBUG5) << " possible merging partners for track #" << iTrack << " are = " << countMergingPartners
                             << std::endl;
 
-  }  // end loop on iTracks
+  } // end loop on iTracks
 
   EVENT::TrackVec finalTracks;
   filterClonesAndMergedTracks(mergingCandidates, input_track_col, finalTracks, false);
@@ -402,16 +406,16 @@ void ClonesAndSplitTracksFinder::mergeSplitTracks(std::unique_ptr<LCCollectionVe
 }
 
 double ClonesAndSplitTracksFinder::calculateSignificancePt(const Track* first, const Track* second) {
-  float omegaFirst  = first->getOmega();
+  float omegaFirst = first->getOmega();
   float omegaSecond = second->getOmega();
 
-  double ptFirst  = 0.3 * _magneticField / (fabs(first->getOmega() * 1000.));
+  double ptFirst = 0.3 * _magneticField / (fabs(first->getOmega() * 1000.));
   double ptSecond = 0.3 * _magneticField / (fabs(second->getOmega() * 1000.));
 
-  const float sigmaPOverPFirst  = sqrt(first->getCovMatrix()[5]) / fabs(omegaFirst);
+  const float sigmaPOverPFirst = sqrt(first->getCovMatrix()[5]) / fabs(omegaFirst);
   const float sigmaPOverPSecond = sqrt(second->getCovMatrix()[5]) / fabs(omegaSecond);
-  const float sigmaPtFirst      = ptFirst * sigmaPOverPFirst;
-  const float sigmaPtSecond     = ptSecond * sigmaPOverPSecond;
+  const float sigmaPtFirst = ptFirst * sigmaPOverPFirst;
+  const float sigmaPtSecond = ptSecond * sigmaPOverPSecond;
 
   const double significance = calculateSignificance(ptFirst, ptSecond, sigmaPtFirst, sigmaPtSecond);
 
@@ -419,11 +423,11 @@ double ClonesAndSplitTracksFinder::calculateSignificancePt(const Track* first, c
 }
 
 double ClonesAndSplitTracksFinder::calculateSignificancePhi(const Track* first, const Track* second) {
-  float phiFirst  = first->getPhi();
+  float phiFirst = first->getPhi();
   float phiSecond = second->getPhi();
-  float deltaPhi  = (M_PI - std::abs(std::abs(phiFirst - phiSecond) - M_PI));
+  float deltaPhi = (M_PI - std::abs(std::abs(phiFirst - phiSecond) - M_PI));
 
-  const float sigmaPhiFirst  = sqrt(first->getCovMatrix()[2]);
+  const float sigmaPhiFirst = sqrt(first->getCovMatrix()[2]);
   const float sigmaPhiSecond = sqrt(second->getCovMatrix()[2]);
 
   const double significance = calculateSignificance(deltaPhi, 0.0, sigmaPhiFirst, sigmaPhiSecond);
@@ -432,10 +436,10 @@ double ClonesAndSplitTracksFinder::calculateSignificancePhi(const Track* first, 
 }
 
 double ClonesAndSplitTracksFinder::calculateSignificanceTanLambda(const Track* first, const Track* second) {
-  float tanLambdaFirst  = first->getTanLambda();
+  float tanLambdaFirst = first->getTanLambda();
   float tanLambdaSecond = second->getTanLambda();
 
-  const float sigmaTanLambdaFirst  = sqrt(first->getCovMatrix()[14]);
+  const float sigmaTanLambdaFirst = sqrt(first->getCovMatrix()[14]);
   const float sigmaTanLambdaSecond = sqrt(second->getCovMatrix()[14]);
 
   const double significance =
@@ -446,7 +450,7 @@ double ClonesAndSplitTracksFinder::calculateSignificanceTanLambda(const Track* f
 
 double ClonesAndSplitTracksFinder::calculateSignificance(const double firstPar, const double secondPar,
                                                          const double firstPar_sigma, const double secondPar_sigma) {
-  const float delta      = fabs(firstPar - secondPar);
+  const float delta = fabs(firstPar - secondPar);
   const float sigmaDelta = sqrt(firstPar_sigma * firstPar_sigma + secondPar_sigma * secondPar_sigma);
 
   return delta / sigmaDelta;
@@ -458,24 +462,24 @@ void ClonesAndSplitTracksFinder::filterClonesAndMergedTracks(std::multimap<int, 
   std::vector<TrackerHitVec> savedHitVec;
 
   for (const auto& iter : candidates) {
-    int    track_a_id       = iter.first;
-    int    track_b_id       = iter.second.first;
-    Track* track_final      = iter.second.second;
-    int    countConnections = candidates.count(track_a_id);
-    bool   multiConnection  = (countConnections > 1);
+    int track_a_id = iter.first;
+    int track_b_id = iter.second.first;
+    Track* track_final = iter.second.second;
+    int countConnections = candidates.count(track_a_id);
+    bool multiConnection = (countConnections > 1);
 
-    if (!multiConnection) {  // if only 1 connection
+    if (!multiConnection) { // if only 1 connection
 
-      if (clones) {  // clones: compare the track pointers
+      if (clones) { // clones: compare the track pointers
         auto it_trk = find(trackVecFinal.begin(), trackVecFinal.end(), track_final);
-        if (it_trk != trackVecFinal.end()) {  // if the track is already there, do nothing
+        if (it_trk != trackVecFinal.end()) { // if the track is already there, do nothing
           continue;
         }
         trackVecFinal.push_back(track_final);
-      } else {  // mergeable tracks: compare the sets of tracker hits
+      } else { // mergeable tracks: compare the sets of tracker hits
 
         TrackerHitVec track_final_hits = track_final->getTrackerHits();
-        bool          toBeSaved        = true;
+        bool toBeSaved = true;
 
         for (const auto& hitsVec : savedHitVec) {
           if (equal(hitsVec.begin(), hitsVec.end(), track_final_hits.begin())) {
@@ -492,13 +496,16 @@ void ClonesAndSplitTracksFinder::filterClonesAndMergedTracks(std::multimap<int, 
         }
       }
 
-    } else {  // if more than 1 connection, clones and mergeable tracks have to be treated a little different
+    } else { // if more than 1 connection, clones and mergeable tracks have to be treated a little different
 
-      if (clones) {  // clones
+      if (clones) { // clones
 
-        //look at the elements with equal range. If their bestTrack is the same, store it (if not already in). If their bestTrack is different, don't store it
-        auto ret = candidates.equal_range(
-            track_a_id);  //a std::pair of iterators on the multimap [ std::pair<std::multimap<Track*,std::pair<Track*,Track*>>::iterator, std::multimap<Track*,std::pair<Track*,Track*>>::iterator> ]
+        // look at the elements with equal range. If their bestTrack is the same, store it (if not already in). If their
+        // bestTrack is different, don't store it
+        auto ret =
+            candidates.equal_range(track_a_id); // a std::pair of iterators on the multimap [
+                                                // std::pair<std::multimap<Track*,std::pair<Track*,Track*>>::iterator,
+                                                // std::multimap<Track*,std::pair<Track*,Track*>>::iterator> ]
         TrackVec bestTracksMultiConnections;
         for (std::multimap<int, std::pair<int, Track*>>::iterator it = ret.first; it != ret.second; ++it) {
           Track* track_best = it->second.second;
@@ -506,35 +513,35 @@ void ClonesAndSplitTracksFinder::filterClonesAndMergedTracks(std::multimap<int, 
         }
         if (std::adjacent_find(bestTracksMultiConnections.begin(), bestTracksMultiConnections.end(),
                                std::not_equal_to<Track*>()) ==
-            bestTracksMultiConnections.end()) {  //one best track with the same track key
+            bestTracksMultiConnections.end()) { // one best track with the same track key
           auto it_trk = find(trackVecFinal.begin(), trackVecFinal.end(), bestTracksMultiConnections.at(0));
-          if (it_trk != trackVecFinal.end()) {  // if the track is already there, do nothing
+          if (it_trk != trackVecFinal.end()) { // if the track is already there, do nothing
             continue;
           }
           trackVecFinal.push_back(bestTracksMultiConnections.at(0));
 
-        } else {  //multiple best tracks with the same track key
+        } else { // multiple best tracks with the same track key
           continue;
         }
 
-      }  // end of clones
+      } // end of clones
 
-      else {                 // mergeable tracks -- at the moment they are all stored (very rare anyways)
-        delete track_final;  //not using the mergedTracks, so delete it
+      else {                // mergeable tracks -- at the moment they are all stored (very rare anyways)
+        delete track_final; // not using the mergedTracks, so delete it
 
         Track* track_a = static_cast<Track*>(inputTracks->getElementAt(track_a_id));
         Track* track_b = static_cast<Track*>(inputTracks->getElementAt(track_b_id));
 
         auto trk1 = find(trackVecFinal.begin(), trackVecFinal.end(), track_a);
 
-        if (trk1 != trackVecFinal.end()) {  // if the track1 is already there
+        if (trk1 != trackVecFinal.end()) { // if the track1 is already there
           continue;
         }
         // otherwise store the two tracks
         trackVecFinal.push_back(track_a);
         trackVecFinal.push_back(track_b);
 
-      }  // end of mergeable tracks
+      } // end of mergeable tracks
     }
   }
 }
@@ -548,7 +555,7 @@ void ClonesAndSplitTracksFinder::mergeAndFit(Track* track_i, Track* track_j, Tra
   for (UInt_t iHits = 0; iHits < trkHits_i.size(); iHits++) {
     trkHits.push_back(trkHits_i.at(iHits));
   }
-  //Remove common hits while filling for the second track
+  // Remove common hits while filling for the second track
   for (UInt_t jHits = 0; jHits < trkHits_j.size(); jHits++) {
     if (std::find(trkHits.begin(), trkHits.end(), trkHits_j.at(jHits)) != trkHits.end()) {
       streamlog_out(DEBUG8) << " This hit is already in the track" << std::endl;
@@ -568,17 +575,17 @@ void ClonesAndSplitTracksFinder::mergeAndFit(Track* track_i, Track* track_j, Tra
   auto marlin_trk = std::unique_ptr<MarlinTrk::IMarlinTrack>(_trksystem->createTrack());
 
   // Make an initial covariance matrix with very broad default values
-  EVENT::FloatVec covMatrix(15, 0);            // Size 15, filled with 0s
-  covMatrix[0]  = (_initialTrackError_d0);     //sigma_d0^2
-  covMatrix[2]  = (_initialTrackError_phi0);   //sigma_phi0^2
-  covMatrix[5]  = (_initialTrackError_omega);  //sigma_omega^2
-  covMatrix[9]  = (_initialTrackError_z0);     //sigma_z0^2
-  covMatrix[14] = (_initialTrackError_tanL);   //sigma_tanl^2
+  EVENT::FloatVec covMatrix(15, 0);          // Size 15, filled with 0s
+  covMatrix[0] = (_initialTrackError_d0);    // sigma_d0^2
+  covMatrix[2] = (_initialTrackError_phi0);  // sigma_phi0^2
+  covMatrix[5] = (_initialTrackError_omega); // sigma_omega^2
+  covMatrix[9] = (_initialTrackError_z0);    // sigma_z0^2
+  covMatrix[14] = (_initialTrackError_tanL); // sigma_tanl^2
 
   const bool direction = _extrapolateForward ? MarlinTrk::IMarlinTrack::forward : MarlinTrk::IMarlinTrack::backward;
 
-  int fit_status = MarlinTrk::createFinalisedLCIOTrack(marlin_trk.get(), trkHits, mergedTrack.get(), direction, covMatrix,
-                                                       _magneticField, _maxChi2perHit);
+  int fit_status = MarlinTrk::createFinalisedLCIOTrack(marlin_trk.get(), trkHits, mergedTrack.get(), direction,
+                                                       covMatrix, _magneticField, _maxChi2perHit);
 
   if (fit_status != 0) {
     streamlog_out(DEBUG4) << "Fit failed with error status " << fit_status << std::endl;
@@ -594,7 +601,8 @@ void ClonesAndSplitTracksFinder::mergeAndFit(Track* track_i, Track* track_j, Tra
 
   marlin_trk->getHitsInFit(hits_in_fit);
   if (hits_in_fit.size() < 3) {
-    streamlog_out(DEBUG4) << "Less than 3 hits in fit: Track discarded. Number of hits =  " << trkHits.size() << std::endl;
+    streamlog_out(DEBUG4) << "Less than 3 hits in fit: Track discarded. Number of hits =  " << trkHits.size()
+                          << std::endl;
     return;
   }
 
@@ -612,7 +620,7 @@ void ClonesAndSplitTracksFinder::mergeAndFit(Track* track_i, Track* track_j, Tra
   }
 
   UTIL::BitField64 encoder2(lcio::LCTrackerCellID::encoding_string());
-  encoder2.reset();  // reset to 0
+  encoder2.reset(); // reset to 0
   MarlinTrk::addHitNumbersToTrack(mergedTrack.get(), all_hits, false, encoder2);
   MarlinTrk::addHitNumbersToTrack(mergedTrack.get(), hits_in_fit, true, encoder2);
 
@@ -638,19 +646,19 @@ void ClonesAndSplitTracksFinder::bestInClones(Track* track_a, Track* track_b, in
   double b_chi2 = track_b->getChi2() / track_b->getNdf();
   double a_chi2 = track_a->getChi2() / track_a->getNdf();
 
-  if (nOverlappingHits == trackerHit_a_size) {  // if the second track is the first track + segment
+  if (nOverlappingHits == trackerHit_a_size) { // if the second track is the first track + segment
     bestTrack = track_b;
-  } else if (nOverlappingHits == trackerHit_b_size) {  // if the second track is a subtrack of the first track
+  } else if (nOverlappingHits == trackerHit_b_size) { // if the second track is a subtrack of the first track
     bestTrack = track_a;
-  } else if (trackerHit_b_size == trackerHit_a_size) {  // if the two tracks have the same length
+  } else if (trackerHit_b_size == trackerHit_a_size) { // if the two tracks have the same length
     if (b_chi2 <= a_chi2) {
       bestTrack = track_b;
     } else {
       bestTrack = track_a;
     }
-  } else if (trackerHit_b_size > trackerHit_a_size) {  // if the second track is longer
+  } else if (trackerHit_b_size > trackerHit_a_size) { // if the second track is longer
     bestTrack = track_b;
-  } else if (trackerHit_b_size < trackerHit_a_size) {  // if the second track is shorter
+  } else if (trackerHit_b_size < trackerHit_a_size) { // if the second track is shorter
     bestTrack = track_a;
   }
 }

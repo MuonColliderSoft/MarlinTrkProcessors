@@ -1,4 +1,4 @@
-# include "FilterTracks.h"
+#include "FilterTracks.h"
 
 #include <math.h>
 
@@ -16,14 +16,12 @@
 
 #include <iostream> 
 
-FilterTracks aFilterTracks ;
+FilterTracks aFilterTracks;
 
-
-FilterTracks::FilterTracks()
-  : Processor("FilterTracks")
-{
+FilterTracks::FilterTracks() : Processor("FilterTracks") {
   // modify processor description
-  _description = "FilterTracks processor filters a collection of tracks based on NHits and MinPt and outputs a filtered collection";
+  _description = "FilterTracks processor filters a collection of tracks based on NHits and MinPt and outputs a "
+                 "filtered collection";
 
   // register steering parameters: name, description, class-variable, default value
   registerProcessorParameter("BarrelOnly",
@@ -32,6 +30,14 @@ FilterTracks::FilterTracks()
 			     _BarrelOnly
 			      );  
   
+  registerProcessorParameter("HasCaloState",
+                             "If true, just keep tracks that have a TrackState at the Calorimeter surface",
+                             _HasCaloState, _HasCaloState);
+
+  registerProcessorParameter("StoreRealTracks",
+                             "If true, complete tracks are stored instead of references",
+                             _storeRealTracks, _storeRealTracks);
+
   registerProcessorParameter("NHitsTotal",
 		  	     "Minimum number of hits on track",
 			     _NHitsTotal,
@@ -209,47 +215,44 @@ void FilterTracks::init()
 {
   // Print the initial parameters
   printParameters() ;
-  // it requires that geometry has been already initialized
-  // buildBfield() ;
+  buildBfield() ;
 }
 
-void FilterTracks::processRunHeader( LCRunHeader* /*run*/)
-{ }
+void FilterTracks::processRunHeader( LCRunHeader* /*run*/) {}
 
 void FilterTracks::buildBfield() 
 {
   // Get the magnetic field
   dd4hep::Detector& lcdd = dd4hep::Detector::getInstance();
-  const double position[3] = {
-      0, 0,
-      0};  // position to calculate magnetic field at (the origin in this case)
-  double magneticFieldVector[3] = {
-      0, 0, 0};  // initialise object to hold magnetic field
-  lcdd.field().magneticField(
-      position,
-      magneticFieldVector);  // get the magnetic field vector from DD4hep
-  _Bz = magneticFieldVector[2]/dd4hep::tesla;
+  const double position[3] = {0, 0, 0};      // position to calculate magnetic field at (the origin in this case)
+  double magneticFieldVector[3] = {0, 0, 0}; // initialise object to hold magnetic field
+  lcdd.field().magneticField(position,
+                             magneticFieldVector); // get the magnetic field vector from DD4hep
+  _Bz = magneticFieldVector[2] / dd4hep::tesla;
 }
 
 void FilterTracks::processEvent( LCEvent * evt )
 {
   // Make the output track collection
   LCCollectionVec *OutputTrackCollection = new LCCollectionVec(LCIO::TRACK);
-  // do not store pointers but real tracks
-  OutputTrackCollection->setSubset(false);
+  OutputTrackCollection->setSubset(_storeRealTracks);
 
-  // if we want to point back to the hits we need to set the flag
-  LCFlagImpl trkFlag(0);
-  trkFlag.setBit(LCIO::TRBIT_HITS);
-  OutputTrackCollection->setFlag(trkFlag.getFlag());
+  if (!_storeRealTracks)
+  {
+    // if we want to point back to the hits we need to set the flag
+    LCFlagImpl trkFlag(0);
+    trkFlag.setBit(LCIO::TRBIT_HITS);
+    OutputTrackCollection->setFlag(trkFlag.getFlag());
+  }
 
   TMVA::Reader* reader = new TMVA::Reader();
 
   // Get input collection
   LCCollection* InputTrackCollection = evt->getCollection(_InputTrackCollection);
   
-  if( InputTrackCollection->getTypeName() != lcio::LCIO::TRACK )
-    { throw EVENT::Exception( "Invalid collection type: " + InputTrackCollection->getTypeName() ) ; }
+  if( InputTrackCollection->getTypeName() != lcio::LCIO::TRACK ) {
+    throw EVENT::Exception( "Invalid collection type: " + InputTrackCollection->getTypeName() );
+  }
 
   // Filter
   std::string encoderString = lcio::LCTrackerCellID::encoding_string();
@@ -285,15 +288,15 @@ void FilterTracks::processEvent( LCEvent * evt )
     reader->BookMVA(_NNmethod, _NNweights);
   }
 
-  for(int i=0; i<InputTrackCollection->getNumberOfElements(); i++) {
+  for(int i = 0; i < InputTrackCollection->getNumberOfElements(); i++) {
     EVENT::Track *trk=dynamic_cast<EVENT::Track*>(InputTrackCollection->getElementAt(i));
 
     vars["trtnh"]  = trk->getTrackerHits().size();
 
     const EVENT::IntVec& subdetectorHits = trk->getSubdetectorHitNumbers();
-    vars["trtvhn"] = subdetectorHits[1]+subdetectorHits[2];
-    vars["trtihn"] = subdetectorHits[3]+subdetectorHits[4];
-    vars["trtohn"] = subdetectorHits[5]+subdetectorHits[6];
+    vars["trtvhn"] = subdetectorHits[1] + subdetectorHits[2];
+    vars["trtihn"] = subdetectorHits[3] + subdetectorHits[4];
+    vars["trtohn"] = subdetectorHits[5] + subdetectorHits[6];
 
     vars["trthn"] = trk->getNholes();
     float pt = fabs(0.3*_Bz/trk->getOmega()/1000);
@@ -312,6 +315,16 @@ void FilterTracks::processEvent( LCEvent * evt )
     vars["tr_d0"] = trk->getD0();
     vars["tr_z0"] = trk->getZ0();
 
+    // Check if a TrackState at the calo surface exists
+    const std::vector<EVENT::TrackState*>& trackStates = trk->getTrackStates();
+    const auto foundCaloState = std::find_if(trackStates.begin(), trackStates.end(), [](const auto ts) {
+                                  return ts->getLocation() == EVENT::TrackState::AtCalorimeter;
+                                }) != trackStates.end();
+    if (_HasCaloState && !foundCaloState) {
+      streamlog_out(DEBUG) << "No calo state, skipping track!" << std::endl;
+      continue;
+    }
+
     if(_BarrelOnly == true) {
       bool endcaphits = false;
       for(int j=0; j<vars["trtnh"]; ++j) {
@@ -324,7 +337,7 @@ void FilterTracks::processEvent( LCEvent * evt )
       }
       if (endcaphits == false) { 
         auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
-        OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
+        OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); // TODO investigate copy constr.
       }
     } else { // track property cuts
 
@@ -357,7 +370,7 @@ void FilterTracks::processEvent( LCEvent * evt )
       } 
 
       auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
-      OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
+      OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); // TODO investigate copy constr.
       
     }
   }
@@ -367,5 +380,4 @@ void FilterTracks::processEvent( LCEvent * evt )
   delete reader;
 }
 
-void FilterTracks::end()
-{  }
+void FilterTracks::end() {}

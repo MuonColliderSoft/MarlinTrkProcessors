@@ -1,16 +1,15 @@
 #ifndef SplitCollectionByPolarAngle_h
 #define SplitCollectionByPolarAngle_h 1
 
-#include "marlin/Processor.h"
 #include "lcio.h"
+#include "marlin/Processor.h"
 #include <string>
 #include <vector>
 
 #include <TH1F.h>
 
-using namespace lcio ;
-using namespace marlin ;
-
+using namespace lcio;
+using namespace marlin;
 
 /** Utility processor that selects and saves the tracker hits with a polar angle
  *  within a given range (defined by the lower and upper limit), along with
@@ -32,49 +31,43 @@ using namespace marlin ;
  */
 
 class SplitCollectionByPolarAngle : public Processor {
-
 public:
+  virtual Processor* newProcessor() { return new SplitCollectionByPolarAngle; }
 
-  virtual Processor*  newProcessor() { return new SplitCollectionByPolarAngle ; }
+  SplitCollectionByPolarAngle();
+  SplitCollectionByPolarAngle(const SplitCollectionByPolarAngle&) = delete;
+  SplitCollectionByPolarAngle& operator=(const SplitCollectionByPolarAngle&) = delete;
 
+  virtual void init();
 
-  SplitCollectionByPolarAngle() ;
+  virtual void processRunHeader(LCRunHeader* run);
 
-  virtual void init() ;
+  virtual void processEvent(LCEvent* evt);
 
-  virtual void processRunHeader( LCRunHeader* run ) ;
+  virtual void check(LCEvent* evt);
 
-  virtual void processEvent( LCEvent * evt ) ;
-
-  virtual void check( LCEvent * evt ) ;
-
-  virtual void end() ;
-
+  virtual void end();
 
 protected:
-
   // --- Input/output collection names:
-  std::vector<std::string> m_inputTrackerHitsCollNames{} ;
-  std::vector<std::string> m_inputTrackerSimHitsCollNames{} ;
-  std::vector<std::string> m_inputTrackerHitRelNames{} ;
-  std::vector<std::string> m_outputTrackerHitsCollNames{} ;
-  std::vector<std::string> m_outputTrackerSimHitsCollNames{} ;
-  std::vector<std::string> m_outputTrackerHitRelNames{} ;
-
+  std::vector<std::string> m_inputTrackerHitsCollNames{};
+  std::vector<std::string> m_inputTrackerSimHitsCollNames{};
+  std::vector<std::string> m_inputTrackerHitRelNames{};
+  std::vector<std::string> m_outputTrackerHitsCollNames{};
+  std::vector<std::string> m_outputTrackerSimHitsCollNames{};
+  std::vector<std::string> m_outputTrackerHitRelNames{};
 
   // --- Processor parameters:
-  bool m_fillHistos{} ;
-  double m_theta_min{} ;
-  double m_theta_max{} ;
+  bool m_fillHistos{};
+  double m_theta_min{};
+  double m_theta_max{};
 
   // --- Diagnostic histograms:
-  TH1F* m_theta   = nullptr ;
-
+  TH1F* m_theta = nullptr;
 
   // --- Run and event counters:
-  int _nRun{} ;
-  int _nEvt{} ;
-
-} ;
+  int _nRun{};
+  int _nEvt{};
+};
 
 #endif

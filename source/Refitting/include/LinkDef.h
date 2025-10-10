@@ -5,12 +5,12 @@
 #pragma link off all functions;
 #pragma link C++ nestedclasses;
 
-#pragma link C++ class std::vector< std::vector<double> >+;
-#pragma link C++ class std::vector< double >+;
+#pragma link C++ class std::vector < std::vector < double>> + ;
+#pragma link C++ class std::vector < double> + ;
 
-//#pragma link C++ class std::vector< std::vector<unsigned int> >+;
-//#pragma link C++ class std::vector< std::map< const std::string, int > >+;
-//#pragma link C++ class std::vector< std::map< const std::string, unsigned > >+;
-//#pragma link C++ class std::vector< std::map< const std::string, float > >+;
+// #pragma link C++ class std::vector< std::vector<unsigned int> >+;
+// #pragma link C++ class std::vector< std::map< const std::string, int > >+;
+// #pragma link C++ class std::vector< std::map< const std::string, unsigned > >+;
+// #pragma link C++ class std::vector< std::map< const std::string, float > >+;
 
 #endif
