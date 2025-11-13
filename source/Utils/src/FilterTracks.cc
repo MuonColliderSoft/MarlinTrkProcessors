@@ -34,6 +34,8 @@ FilterTracks::FilterTracks() : Processor("FilterTracks") {
 
   registerProcessorParameter("MaxHoles", "Maximum number of holes on track", _MaxHoles, _MaxHoles);
 
+  registerProcessorParameter("MaxOutliers", "Max number of outliers", _MaxOutliers, _MaxOutliers);
+
   registerProcessorParameter("MinPt", "Minimum transverse momentum", _MinPt, _MinPt);
 
   registerProcessorParameter("Chi2Spatial", "Spatial chi squared", _Chi2Spatial, _Chi2Spatial);

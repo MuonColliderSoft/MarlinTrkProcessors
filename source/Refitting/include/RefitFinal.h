@@ -87,10 +87,16 @@ protected:
   double _Max_Chi2_Incr = DBL_MAX;
   int _refPoint = -1;
 
-  float _bField = 0.0;
+  float _bField = 5.0;
 
   bool _extrapolateForward = true;
   int _minClustersOnTrackAfterFit = 0;
+
+  float _initialTrackError_d0{};
+  float _initialTrackError_phi0{};
+  float _initialTrackError_omega{};
+  float _initialTrackError_z0{};
+  float _initialTrackError_tanL{};
 
   std::shared_ptr<UTIL::BitField64> _encoder{};
 };

@@ -53,6 +53,21 @@ RefitFinal::RefitFinal() : Processor("RefitFinal") {
   registerProcessorParameter("EnergyLossOn", "Use Energy Loss in Fit", _ElossOn, bool(true));
 
   registerProcessorParameter("SmoothOn", "Smooth All Mesurement Sites in Fit", _SmoothOn, bool(false));
+  
+  registerProcessorParameter("InitialTrackErrorD0", "Value used for the initial d0 variance of the trackfit",
+                             _initialTrackError_d0, float(1.e6));
+
+  registerProcessorParameter("InitialTrackErrorPhi0", "Value used for the initial phi0 variance of the trackfit",
+                             _initialTrackError_phi0, float(1.e2));
+
+  registerProcessorParameter("InitialTrackErrorOmega", "Value used for the initial omega variance of the trackfit",
+                             _initialTrackError_omega, float(1.e-4));
+
+  registerProcessorParameter("InitialTrackErrorZ0", "Value used for the initial z0 variance of the trackfit",
+                             _initialTrackError_z0, float(1.e6));
+
+  registerProcessorParameter("InitialTrackErrorTanL", "Value used for the initial tanL variance of the trackfit",
+                             _initialTrackError_tanL, float(1.e2));
 
   registerProcessorParameter("Max_Chi2_Incr", "maximum allowable chi2 increment when moving from one site to another",
                              _Max_Chi2_Incr, _Max_Chi2_Incr);
@@ -69,6 +84,9 @@ RefitFinal::RefitFinal() : Processor("RefitFinal") {
 
   registerProcessorParameter("MinClustersOnTrackAfterFit", "Final minimum number of track clusters",
                              _minClustersOnTrackAfterFit, int(4));
+
+  registerProcessorParameter("ReducedChi2Cut", "Cut on maximum allowed reduced chi2",
+                             _ReducedChi2Cut, double(-1.0));
 }
 
 void RefitFinal::init() {
@@ -146,6 +164,11 @@ void RefitFinal::processEvent(LCEvent* evt) {
 
     const int nHitsTrack = trkHits.size();
 
+    if (nHitsTrack < 3) {
+      streamlog_out(DEBUG3) << "Track " << iTrack << " has less than 3 hits, skipping" << std::endl;
+      continue;
+    }
+
     hitInSubDet.clear();
 
     for (int iHit = 0; iHit < nHitsTrack && iHit < nHitsTrack; ++iHit) {
@@ -154,28 +177,44 @@ void RefitFinal::processEvent(LCEvent* evt) {
       ++hitInSubDet[_encoder->operator[](UTIL::LCTrackerCellID::subdet())];
     }
 
-    int init_status = FitInit2(track, marlin_trk.get());
+    //int init_status = FitInit2(track, marlin_trk.get());
 
-    if (init_status != 0) {
-      continue;
-    }
+    //if (init_status != 0) {
+    //  continue;
+    //}
 
-    streamlog_out(DEBUG4) << "Refit: Trackstate after initialisation\n" << marlin_trk->toString() << std::endl;
+    //streamlog_out(DEBUG4) << "Refit: Trackstate after initialisation\n" << marlin_trk->toString() << std::endl;
 
-    streamlog_out(DEBUG5) << "track initialised " << std::endl;
+    //streamlog_out(DEBUG5) << "track initialised " << std::endl;
 
-    int fit_status = marlin_trk->fit();
+    //int fit_status = marlin_trk->fit();
 
-    streamlog_out(DEBUG4) << "RefitHit: Trackstate after fit()\n" << marlin_trk->toString() << std::endl;
+    //streamlog_out(DEBUG4) << "RefitHit: Trackstate after fit()\n" << marlin_trk->toString() << std::endl;
 
-    if (fit_status != 0) {
-      continue;
-    }
+    //if (fit_status != 0) {
+    //  continue;
+    //}
 
     auto lcio_trk = std::unique_ptr<IMPL::TrackImpl>(new IMPL::TrackImpl());
 
-    const bool fit_direction = MarlinTrk::IMarlinTrack::forward;
-    int return_code = finaliseLCIOTrack(marlin_trk.get(), lcio_trk.get(), trkHits, fit_direction);
+    // setup initial dummy covariance matrix
+    EVENT::FloatVec covMatrix;
+    covMatrix.resize(15);
+
+    for (unsigned icov = 0; icov < covMatrix.size(); ++icov) {
+      covMatrix[icov] = 0;
+    }
+
+    covMatrix[0] = (_initialTrackError_d0);    // sigma_d0^2
+    covMatrix[2] = (_initialTrackError_phi0);  // sigma_phi0^2
+    covMatrix[5] = (_initialTrackError_omega); // sigma_omega^2
+    covMatrix[9] = (_initialTrackError_z0);    // sigma_z0^2
+    covMatrix[14] = (_initialTrackError_tanL); // sigma_tanl^2
+
+    const bool fit_direction = _extrapolateForward ? MarlinTrk::IMarlinTrack::forward : MarlinTrk::IMarlinTrack::backward;
+    int return_code = MarlinTrk::createFinalisedLCIOTrack(marlin_trk.get(), trkHits, lcio_trk.get(), fit_direction, covMatrix, _bField,
+                                                    _Max_Chi2_Incr);
+    // finaliseLCIOTrack(marlin_trk.get(), lcio_trk.get(), trkHits, fit_direction);
 
     if (return_code != MarlinTrk::IMarlinTrack::success) {
       streamlog_out(DEBUG3) << "finaliseLCIOTrack failed" << std::endl;
