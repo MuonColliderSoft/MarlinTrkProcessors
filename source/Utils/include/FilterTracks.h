@@ -71,6 +71,9 @@ private:
   //! Cut off for maximum number of holes on track
   int _MaxHoles = 0;
 
+  //! Cut off for maximum number of outliers on track
+  int _MaxOutliers = 20;
+
   //! Cut off for momentum (GeV)
   float _MinPt = 1.0; // units GeV
 
@@ -78,5 +81,5 @@ private:
   float _Chi2Spatial = 0;
 
   //! Default magnetic field value (Tesla)
-  float _Bz = 3.57;
+  float _Bz = 5.0;
 };
