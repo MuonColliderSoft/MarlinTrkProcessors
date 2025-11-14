@@ -9,6 +9,10 @@
 #include <IMPL/LCCollectionVec.h>
 #include <UTIL/CellIDDecoder.h>
 #include <UTIL/LCTrackerConf.h>
+#include <EVENT/MCParticle.h>
+#include <IMPL/LCRelationImpl.h>
+
+#include <UTIL/LCRelationNavigator.h>
 
 FilterTracks aFilterTracks;
 
@@ -18,6 +22,20 @@ FilterTracks::FilterTracks() : Processor("FilterTracks") {
                  "filtered collection";
 
   // register steering parameters: name, description, class-variable, default value
+  registerInputCollection(LCIO::TRACK, "InputTrackCollectionName", "Name of the input collection",
+                          _InputTrackCollection, _InputTrackCollection);
+
+  registerOutputCollection(LCIO::TRACK, "OutputTrackCollectionName", "Name of output collection",
+                           _OutputTrackCollection, std::string("FilteredTracks"));
+
+  registerInputCollection(LCIO::LCRELATION, "InputRelationCollectionName",
+                          "Name of the input track to MCParticle relation collection", _InputTrackRelationCollection,
+                          _InputTrackRelationCollection);
+
+  registerOutputCollection(LCIO::LCRELATION, "OutputRelationCollectionName",
+                           "Refit Track to MCParticle relation collection Name", _OutputTrackRelationCollection,
+                           _OutputTrackRelationCollection);
+
   registerProcessorParameter("BarrelOnly", "If true, just keep tracks with only barrel hits", _BarrelOnly, _BarrelOnly);
 
   registerProcessorParameter("HasCaloState",
@@ -34,17 +52,13 @@ FilterTracks::FilterTracks() : Processor("FilterTracks") {
 
   registerProcessorParameter("MaxHoles", "Maximum number of holes on track", _MaxHoles, _MaxHoles);
 
-  registerProcessorParameter("MaxOutliers", "Max number of outliers", _MaxOutliers, _MaxOutliers);
-
   registerProcessorParameter("MinPt", "Minimum transverse momentum", _MinPt, _MinPt);
 
+  registerProcessorParameter("MaxD0", "Max d0", _MaxD0, _MaxD0);
+
+  registerProcessorParameter("MaxZ0", "Max z0", _MaxZ0, _MaxZ0);
+
   registerProcessorParameter("Chi2Spatial", "Spatial chi squared", _Chi2Spatial, _Chi2Spatial);
-
-  registerInputCollection(LCIO::TRACK, "InputTrackCollectionName", "Name of the input collection",
-                          _InputTrackCollection, _InputTrackCollection);
-
-  registerOutputCollection(LCIO::TRACK, "OutputTrackCollectionName", "Name of output collection",
-                           _OutputTrackCollection, std::string("FilteredTracks"));
 }
 
 void FilterTracks::init() {
@@ -70,12 +84,19 @@ void FilterTracks::processEvent(LCEvent* evt) {
   LCCollectionVec* OutputTrackCollection = new LCCollectionVec(LCIO::TRACK);
   OutputTrackCollection->setSubset(true);
 
+  // track-mcpart relation output collections
+  UTIL::LCRelationNavigator myNav = UTIL::LCRelationNavigator(LCIO::TRACK, LCIO::MCPARTICLE); 
+  
   // Get input collection
   LCCollection* InputTrackCollection = evt->getCollection(_InputTrackCollection);
 
   if (InputTrackCollection->getTypeName() != lcio::LCIO::TRACK) {
     throw EVENT::Exception("Invalid collection type: " + InputTrackCollection->getTypeName());
   }
+
+  // Get input relations
+  LCCollection* InputTrackRelationCollection = evt->getCollection(_InputTrackRelationCollection);
+  std::shared_ptr<LCRelationNavigator> relation = std::make_shared<LCRelationNavigator>(InputTrackRelationCollection);
 
   // Filter
   std::string encoderString = lcio::LCTrackerCellID::encoding_string();
@@ -122,14 +143,24 @@ void FilterTracks::processEvent(LCEvent* evt) {
       }
     } else { // track property cuts
       if (nhittotal > _NHitsTotal && nhitvertex > _NHitsVertex && nhitinner > _NHitsInner && nhitouter > _NHitsOuter &&
-          pt > _MinPt && chi2spatial > _Chi2Spatial && nholes <= _MaxHoles) {
+          pt > _MinPt && chi2spatial > _Chi2Spatial && nholes <= _MaxHoles &&
+          fabs(trk->getD0()) < _MaxD0 && fabs(trk->getZ0()) < _MaxZ0) {
         OutputTrackCollection->addElement(trk);
+
+        auto mcParticleVec = relation->getRelatedToObjects(trk);
+        auto weightVec = relation->getRelatedToWeights(trk);
+        for (size_t irel = 0; irel < mcParticleVec.size(); ++irel) {
+          myNav.addRelation(trk, mcParticleVec[irel], weightVec[irel]);
+        }
+        
       }
     }
   }
 
   // Save output track collection
   evt->addCollection(OutputTrackCollection, _OutputTrackCollection);
+  LCCollection* outputTrackHitRel = myNav.createLCCollection();
+  evt->addCollection(outputTrackHitRel, _OutputTrackRelationCollection);
 }
 
 void FilterTracks::end() {}

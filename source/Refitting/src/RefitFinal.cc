@@ -8,6 +8,8 @@
 #include <MarlinTrk/IMarlinTrack.h>
 #include <MarlinTrk/MarlinTrkUtils.h>
 
+#include <DD4hep/Detector.h>
+
 #include <EVENT/TrackerHit.h>
 #include <IMPL/LCCollectionVec.h>
 #include <IMPL/LCFlagImpl.h>
@@ -84,6 +86,9 @@ RefitFinal::RefitFinal() : Processor("RefitFinal") {
 
   registerProcessorParameter("MinClustersOnTrackAfterFit", "Final minimum number of track clusters",
                              _minClustersOnTrackAfterFit, int(4));
+
+  registerProcessorParameter("MaxOutliersAllowed", "Maximum number of outliers allowed on the refitted track",
+                             _maxOutliersAllowed, int(99));
 
   registerProcessorParameter("ReducedChi2Cut", "Cut on maximum allowed reduced chi2",
                              _ReducedChi2Cut, double(-1.0));
@@ -177,24 +182,6 @@ void RefitFinal::processEvent(LCEvent* evt) {
       ++hitInSubDet[_encoder->operator[](UTIL::LCTrackerCellID::subdet())];
     }
 
-    //int init_status = FitInit2(track, marlin_trk.get());
-
-    //if (init_status != 0) {
-    //  continue;
-    //}
-
-    //streamlog_out(DEBUG4) << "Refit: Trackstate after initialisation\n" << marlin_trk->toString() << std::endl;
-
-    //streamlog_out(DEBUG5) << "track initialised " << std::endl;
-
-    //int fit_status = marlin_trk->fit();
-
-    //streamlog_out(DEBUG4) << "RefitHit: Trackstate after fit()\n" << marlin_trk->toString() << std::endl;
-
-    //if (fit_status != 0) {
-    //  continue;
-    //}
-
     auto lcio_trk = std::unique_ptr<IMPL::TrackImpl>(new IMPL::TrackImpl());
 
     // setup initial dummy covariance matrix
@@ -210,6 +197,13 @@ void RefitFinal::processEvent(LCEvent* evt) {
     covMatrix[5] = (_initialTrackError_omega); // sigma_omega^2
     covMatrix[9] = (_initialTrackError_z0);    // sigma_z0^2
     covMatrix[14] = (_initialTrackError_tanL); // sigma_tanl^2
+
+    // get magnetic field at the origin
+    dd4hep::Detector& lcdd = dd4hep::Detector::getInstance();
+    const double position[3] = {0, 0, 0};      // position to calculate magnetic field at (the origin in this case)
+    double magneticFieldVector[3] = {0, 0, 0}; // initialise object to hold magnetic field
+    lcdd.field().magneticField(position, magneticFieldVector); // get the magnetic field vector from DD4hep
+    _bField = magneticFieldVector[2] / dd4hep::tesla;
 
     const bool fit_direction = _extrapolateForward ? MarlinTrk::IMarlinTrack::forward : MarlinTrk::IMarlinTrack::backward;
     int return_code = MarlinTrk::createFinalisedLCIOTrack(marlin_trk.get(), trkHits, lcio_trk.get(), fit_direction, covMatrix, _bField,
@@ -241,6 +235,14 @@ void RefitFinal::processEvent(LCEvent* evt) {
     }
 
     marlin_trk->getOutliers(outliers);
+
+    if (int(outliers.size()) > _maxOutliersAllowed) {
+      streamlog_out(DEBUG3) << "More than " << _maxOutliersAllowed
+                            << " outliers: Track "
+                               "Discarded. Number of outliers =  "
+                            << outliers.size() << std::endl;
+      continue;
+    }
 
     std::vector<TrackerHit*> all_hits;
     all_hits.reserve(hits_in_fit.size() + outliers.size());
@@ -315,25 +317,4 @@ LCCollection* RefitFinal::GetCollection(LCEvent* evt, std::string colName) {
   }
 
   return col;
-}
-
-int RefitFinal::FitInit2(Track* track, MarlinTrk::IMarlinTrack* marlinTrk) {
-  TrackStateImpl trackState;
-
-  if (_refPoint == -1) {
-    trackState = TrackStateImpl(TrackState::AtOther, track->getD0(), track->getPhi(), track->getOmega(), track->getZ0(),
-                                track->getTanLambda(), track->getCovMatrix(), track->getReferencePoint());
-  } else {
-    const TrackState* trackAtHit = track->getTrackState(_refPoint);
-    if (not trackAtHit) {
-      streamlog_out(ERROR) << "Cannot find trackstate for " << _refPoint << std::endl;
-      return MarlinTrk::IMarlinTrack::error;
-    }
-    trackState = TrackStateImpl(*trackAtHit);
-  }
-
-  const bool direction = _extrapolateForward ? MarlinTrk::IMarlinTrack::forward : MarlinTrk::IMarlinTrack::backward;
-  marlinTrk->initialise(trackState, _bField, direction);
-
-  return MarlinTrk::IMarlinTrack::success;
 }

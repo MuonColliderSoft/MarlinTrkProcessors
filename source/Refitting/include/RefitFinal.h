@@ -91,6 +91,7 @@ protected:
 
   bool _extrapolateForward = true;
   int _minClustersOnTrackAfterFit = 0;
+  int _maxOutliersAllowed = 99;
 
   float _initialTrackError_d0{};
   float _initialTrackError_phi0{};
