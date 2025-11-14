@@ -52,9 +52,11 @@ public:
 private:
   //! Input track collection
   std::string _InputTrackCollection{};
+  std::string _InputTrackRelationCollection{};
 
   //! Output track collection
   std::string _OutputTrackCollection{};
+  std::string _OutputTrackRelationCollection{};
 
   bool _BarrelOnly = false;
   bool _HasCaloState = false;
@@ -71,14 +73,15 @@ private:
   //! Cut off for maximum number of holes on track
   int _MaxHoles = 0;
 
-  //! Cut off for maximum number of outliers on track
-  int _MaxOutliers = 20;
-
   //! Cut off for momentum (GeV)
   float _MinPt = 1.0; // units GeV
 
   //! Cut off for spatial and temporal chi squared values
   float _Chi2Spatial = 0;
+
+  //! Cut off for impact parameters [mm]
+  float _MaxD0 = 999.;
+  float _MaxZ0 = 999.;
 
   //! Default magnetic field value (Tesla)
   float _Bz = 5.0;
