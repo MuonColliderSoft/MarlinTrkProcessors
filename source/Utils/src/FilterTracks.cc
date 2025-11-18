@@ -95,8 +95,16 @@ void FilterTracks::processEvent(LCEvent* evt) {
   }
 
   // Get input relations
-  LCCollection* InputTrackRelationCollection = evt->getCollection(_InputTrackRelationCollection);
-  std::shared_ptr<LCRelationNavigator> relation = std::make_shared<LCRelationNavigator>(InputTrackRelationCollection);
+  LCCollection* InputTrackRelationCollection = nullptr;
+  std::shared_ptr<LCRelationNavigator> relation;
+  bool has_input_relations = true;
+  try {
+    InputTrackRelationCollection = evt->getCollection(_InputTrackRelationCollection);
+    relation = std::make_shared<LCRelationNavigator>(InputTrackRelationCollection);
+  } catch (lcio::DataNotAvailableException& e) {
+    streamlog_out(WARNING) << "Relation collection: " << _InputTrackRelationCollection << " not available" << std::endl;
+    has_input_relations = false;
+  }
 
   // Filter
   std::string encoderString = lcio::LCTrackerCellID::encoding_string();
@@ -142,25 +150,63 @@ void FilterTracks::processEvent(LCEvent* evt) {
         OutputTrackCollection->addElement(trk);
       }
     } else { // track property cuts
-      if (nhittotal > _NHitsTotal && nhitvertex > _NHitsVertex && nhitinner > _NHitsInner && nhitouter > _NHitsOuter &&
-          pt > _MinPt && chi2spatial > _Chi2Spatial && nholes <= _MaxHoles &&
-          fabs(trk->getD0()) < _MaxD0 && fabs(trk->getZ0()) < _MaxZ0) {
-        OutputTrackCollection->addElement(trk);
-
+      if (nhittotal < _NHitsTotal){
+        streamlog_out(DEBUG) << "Only " << nhittotal << " hits, skipping track!" << std::endl;
+        continue;
+      }
+      if (nhitvertex < _NHitsVertex){
+        streamlog_out(DEBUG) << "Only " << nhitvertex << " vertex hits, skipping track!" << std::endl;
+        continue;
+      }
+      if (nhitinner < _NHitsInner) {
+        streamlog_out(DEBUG) << "Only " << nhitinner << " inner tracker hits, skipping track!" << std::endl;
+        continue;
+      }
+      if (nhitouter < _NHitsOuter) {
+        streamlog_out(DEBUG) << "Only " << nhitouter << " outer tracker hits, skipping track!" << std::endl;
+        continue;
+      }
+      if (pt < _MinPt){
+        streamlog_out(DEBUG) << "Pt = " << pt << " GeV, skipping track!" << std::endl;
+        continue;
+      }
+      if (chi2spatial > _Chi2Spatial){
+        streamlog_out(DEBUG) << "Chi2 spatial = " << chi2spatial << ", skipping track!" << std::endl;
+        continue;
+      }
+      if (nholes > _MaxHoles){
+        streamlog_out(DEBUG) << "Nholes = " << nholes << ", skipping track!" << std::endl;
+        continue;
+      }
+      if (fabs(trk->getD0()) > _MaxD0){
+        streamlog_out(DEBUG) << "D0 = " << trk->getD0() << ", skipping track!" << std::endl;
+        continue;
+      }
+      if (fabs(trk->getZ0()) > _MaxZ0){
+        streamlog_out(DEBUG) << "Z0 = " << trk->getZ0() << ", skipping track!" << std::endl;
+        continue;
+      }
+      
+      OutputTrackCollection->addElement(trk);
+      
+      // Add track-mcpart relations
+      if (has_input_relations) {
         auto mcParticleVec = relation->getRelatedToObjects(trk);
         auto weightVec = relation->getRelatedToWeights(trk);
         for (size_t irel = 0; irel < mcParticleVec.size(); ++irel) {
           myNav.addRelation(trk, mcParticleVec[irel], weightVec[irel]);
         }
-        
       }
+      
     }
   }
 
   // Save output track collection
   evt->addCollection(OutputTrackCollection, _OutputTrackCollection);
-  LCCollection* outputTrackHitRel = myNav.createLCCollection();
-  evt->addCollection(outputTrackHitRel, _OutputTrackRelationCollection);
+  if (has_input_relations){
+    LCCollection* outputTrackHitRel = myNav.createLCCollection();
+    evt->addCollection(outputTrackHitRel, _OutputTrackRelationCollection);
+  }
 }
 
 void FilterTracks::end() {}
