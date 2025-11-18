@@ -58,7 +58,7 @@ FilterTracks::FilterTracks() : Processor("FilterTracks") {
 
   registerProcessorParameter("MaxZ0", "Max z0", _MaxZ0, _MaxZ0);
 
-  registerProcessorParameter("Chi2Spatial", "Spatial chi squared", _Chi2Spatial, _Chi2Spatial);
+  registerProcessorParameter("MaxChi2OverNdf", "Max redcuced chi squared", _Chi2Spatial, _Chi2Spatial);
 }
 
 void FilterTracks::init() {
@@ -123,6 +123,7 @@ void FilterTracks::processEvent(LCEvent* evt) {
     float pt = fabs(0.3 * _Bz / trk->getOmega() / 1000);
 
     float chi2spatial = trk->getChi2();
+    int ndf = trk->getNdf();
 
     int nholes = trk->getNholes();
 
@@ -170,8 +171,8 @@ void FilterTracks::processEvent(LCEvent* evt) {
         streamlog_out(DEBUG) << "Pt = " << pt << " GeV, skipping track!" << std::endl;
         continue;
       }
-      if (chi2spatial > _Chi2Spatial){
-        streamlog_out(DEBUG) << "Chi2 spatial = " << chi2spatial << ", skipping track!" << std::endl;
+      if (chi2spatial/ndf > _Chi2Spatial){
+        streamlog_out(DEBUG) << "Chi2/ndf = " << chi2spatial/ndf << ", skipping track!" << std::endl;
         continue;
       }
       if (nholes > _MaxHoles){
