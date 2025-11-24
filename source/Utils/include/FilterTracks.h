@@ -75,6 +75,7 @@ private:
 
   //! Cut off for momentum (GeV)
   float _MinPt = 1.0; // units GeV
+  float _MaxPt = -99.0;  // units GeV
 
   //! Cut off for spatial and temporal chi squared values
   float _Chi2Spatial = 0;
