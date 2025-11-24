@@ -54,6 +54,8 @@ FilterTracks::FilterTracks() : Processor("FilterTracks") {
 
   registerProcessorParameter("MinPt", "Minimum transverse momentum", _MinPt, _MinPt);
 
+  registerProcessorParameter("MaxPt", "Maximum transverse momentum", _MaxPt, _MaxPt);
+
   registerProcessorParameter("MaxD0", "Max d0", _MaxD0, _MaxD0);
 
   registerProcessorParameter("MaxZ0", "Max z0", _MaxZ0, _MaxZ0);
@@ -168,7 +170,11 @@ void FilterTracks::processEvent(LCEvent* evt) {
         continue;
       }
       if (pt < _MinPt){
-        streamlog_out(DEBUG) << "Pt = " << pt << " GeV, skipping track!" << std::endl;
+        streamlog_out(DEBUG) << "Pt = " << pt << " GeV [below minimum], skipping track!" << std::endl;
+        continue;
+      }
+      if (_MaxPt > 0 && pt > _MaxPt){
+        streamlog_out(DEBUG) << "Pt = " << pt << " GeV [above maximum], skipping track!" << std::endl;
         continue;
       }
       if (chi2spatial/ndf > _Chi2Spatial){
