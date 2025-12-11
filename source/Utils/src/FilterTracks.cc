@@ -140,6 +140,24 @@ FilterTracks::FilterTracks()
           _MaxSigQoverP
         );
 
+  registerProcessorParameter("MaxReducedChi2",
+          "Max reduced Chi2",
+          _MaxReducedChi2,
+          _MaxReducedChi2
+        );
+
+  registerProcessorParameter("MaxPromptD0",
+          "Max d0",
+          _MaxD0,
+          _MaxD0
+        );
+
+  registerProcessorParameter("MaxPromptZ0",
+          "Max z0",
+          _MaxZ0,
+          _MaxZ0
+        );
+
   registerProcessorParameter("Bz",
              "Magnetic field in Tesla (default: 5)",
            _Bz,
@@ -245,11 +263,15 @@ void FilterTracks::processEvent( LCEvent * evt )
     {"trtnh", 0},
     {"trch2", 0},
     {"trndf", 0},
+    {"trnoh", 0},
     {"tr_sigd0",0},
     {"tr_sigz0",0},
     {"tr_sigtheta",0},
     {"tr_sigphi",0},
-    {"tr_sigqoverp",0}
+    {"tr_sigqoverp",0},
+    {"tr_redchi2",0},
+    {"tr_d0",0},
+    {"tr_z0",0}
   };
 
   if ( not _NNmethod.empty() ) {
@@ -279,12 +301,16 @@ void FilterTracks::processEvent( LCEvent * evt )
     vars["trch2"] = trk->getChi2();
 
     vars["trndf"] = trk->getNdf();
-
+    vars["tr_redchi2"] = vars["trch2"] / vars["trndf"];
+    vars["trnoh"] = (vars["trtnh"]-vars["trndf"]/2) / vars["trtnh"];
     vars["tr_sigd0"] = sqrt(trk->getCovMatrix()[0]);
     vars["tr_sigz0"] = sqrt(trk->getCovMatrix()[2]);
     vars["tr_sigtheta"] = sqrt(trk->getCovMatrix()[9]);
     vars["tr_sigphi"] = sqrt(trk->getCovMatrix()[5]);
     vars["tr_sigqoverp"] = sqrt(trk->getCovMatrix()[14]);
+
+    vars["tr_d0"] = trk->getD0();
+    vars["tr_z0"] = trk->getZ0();
 
     if(_BarrelOnly == true) {
       bool endcaphits = false;
@@ -301,14 +327,8 @@ void FilterTracks::processEvent( LCEvent * evt )
         OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
       }
     } else { // track property cuts
-      if ( not _NNmethod.empty() ) { // NN cuts
-        auto prediction = reader->EvaluateMVA(_NNmethod);
-        if ( prediction > _NNthr ) {
-          auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
-          OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
-        }
-      } else { // user cuts
-        if (vars["trtnh"]  > _NHitsTotal  &&
+
+      if (!(vars["trtnh"]  > _NHitsTotal  &&
 	          vars["trtvhn"] > _NHitsVertex &&
 	          vars["trtihn"] > _NHitsInner  &&
 	          vars["trtohn"] > _NHitsOuter  &&
@@ -318,19 +338,27 @@ void FilterTracks::processEvent( LCEvent * evt )
             theta          < _MaxTheta    &&
 	          vars["trch2"]  > _Chi2Spatial &&
             vars["trndf"]  > _MinNdf      &&
+            vars["tr_redchi2"]  < _MaxReducedChi2  &&
             vars["trtnh"]-vars["trndf"]/2 < _MaxOutl &&
-            (vars["trtnh"]-vars["trndf"]/2) / vars["trtnh"] < _MaxOutlOverHits &&
+            vars["trnoh"] < _MaxOutlOverHits &&
             vars["trthn"]  < _MaxHoles    &&
             vars["tr_sigd0"] < _MaxSigD0  &&
             vars["tr_sigz0"] < _MaxSigZ0  &&
             vars["tr_sigtheta"] < _MaxSigTheta  &&
             vars["tr_sigphi"] < _MaxSigPhi  &&
-            vars["tr_sigqoverp"] < _MaxSigQoverP)
-	          { 
-              auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
-              OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
-            }
-      }
+            vars["tr_sigqoverp"] < _MaxSigQoverP &&
+            std::fabs(vars["tr_d0"]) < _MaxD0 &&
+            std::fabs(vars["tr_z0"]) < _MaxZ0)) continue;
+
+      if ( not _NNmethod.empty() ) { // NN cuts
+        
+        auto prediction = reader->EvaluateMVA(_NNmethod);
+        if ( prediction <= _NNthr ) continue;
+      } 
+
+      auto itrk = dynamic_cast<IMPL::TrackImpl*>(trk);
+      OutputTrackCollection->addElement(new IMPL::TrackImpl(*itrk)); 
+      
     }
   }
 

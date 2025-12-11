@@ -89,6 +89,7 @@ private:
 
    //! Cut off for the value ndf
    int _MinNdf = 1;
+   float _MaxReducedChi2 = 1.e20;
 
    //! Cut off for outliers number   
    int _MaxOutl = 10;  
@@ -105,6 +106,9 @@ private:
    float _MaxSigTheta = 999;
    float _MaxSigPhi = 999;
    float _MaxSigQoverP = 999;
+
+   float _MaxD0 = 999.;
+   float _MaxZ0 = 999.;
 
    //! NN parameters
    std::string _NNmethod = ""; // if defined apply the NN
